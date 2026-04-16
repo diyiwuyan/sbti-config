@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>霍兰德职业兴趣测试</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #0d0d0d; color: #eee; font-family: -apple-system, 'PingFang SC', sans-serif; min-height: 100vh; }
+
+  /* 首页 */
+  .screen { display: none; padding: 0 24px 60px; }
+  .screen.active { display: block; }
+
+  .hero { padding: 60px 0 32px; text-align: center; }
+  .hero-emoji { font-size: 72px; display: block; margin-bottom: 20px; }
+  .hero-title { font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+  .hero-sub { font-size: 14px; color: #666; line-height: 1.7; }
+
+  .intro-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; margin: 24px 0; }
+  .intro-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .intro-row:last-child { margin-bottom: 0; }
+  .intro-dot { width: 8px; height: 8px; border-radius: 50%; background: #4fc3f7; margin-top: 6px; flex-shrink: 0; }
+  .intro-text { font-size: 14px; color: #aaa; line-height: 1.6; }
+
+  .btn-start { width: 100%; padding: 18px; background: linear-gradient(135deg, #4fc3f7, #0288d1); color: #fff; font-size: 18px; font-weight: 700; border: none; border-radius: 16px; margin-top: 8px; cursor: pointer; }
+
+  /* 答题页 */
+  .progress-bar-wrap { height: 4px; background: #1a1a1a; margin-bottom: 0; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #4fc3f7, #0288d1); transition: width 0.4s; }
+  .q-header { padding: 20px 24px 0; display: flex; justify-content: space-between; align-items: center; }
+  .q-num { font-size: 13px; color: #555; }
+  .q-num span { color: #4fc3f7; font-weight: 700; }
+  .q-body { padding: 24px 24px 0; }
+  .q-text { font-size: 17px; color: #eee; line-height: 1.7; font-weight: 600; margin-bottom: 28px; }
+  .q-tip { font-size: 13px; color: #555; margin-bottom: 16px; }
+
+  .options { display: flex; flex-direction: column; gap: 12px; padding: 0 24px 40px; }
+  .opt { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.15s; }
+  .opt:active { background: #222; }
+  .opt.selected { border-color: #4fc3f7; background: #4fc3f722; }
+  .opt-letter { width: 32px; height: 32px; border-radius: 50%; background: #252525; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #888; flex-shrink: 0; }
+  .opt.selected .opt-letter { background: #4fc3f7; border-color: #4fc3f7; color: #000; }
+  .opt-text { font-size: 15px; color: #ccc; line-height: 1.5; flex: 1; }
+
+  /* 结果页 */
+  .result-hero { text-align: center; padding: 48px 24px 24px; }
+  .result-emoji { font-size: 80px; display: block; margin-bottom: 16px; }
+  .result-type { font-size: 13px; font-weight: 700; letter-spacing: 3px; color: #4fc3f7; margin-bottom: 8px; }
+  .result-name { font-size: 36px; font-weight: 900; color: #fff; margin-bottom: 12px; }
+  .result-slogan { font-size: 15px; color: #888; font-style: italic; line-height: 1.6; }
+
+  .result-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; margin: 0 24px 16px; }
+  .rc-title { font-size: 13px; font-weight: 700; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+  .rc-text { font-size: 14px; color: #aaa; line-height: 1.8; }
+
+  .careers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .career-tag { background: #4fc3f722; border: 1px solid #4fc3f744; border-radius: 20px; padding: 6px 14px; font-size: 13px; color: #4fc3f7; }
+
+  .score-bars { display: flex; flex-direction: column; gap: 12px; }
+  .score-row { display: flex; align-items: center; gap: 10px; }
+  .score-label { font-size: 13px; color: #888; width: 28px; flex-shrink: 0; }
+  .score-track { flex: 1; height: 8px; background: #252525; border-radius: 4px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .score-val { font-size: 13px; color: #666; width: 24px; text-align: right; flex-shrink: 0; }
+
+  .btn-retry { width: calc(100% - 48px); margin: 8px 24px 0; padding: 16px; background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 16px; font-weight: 700; border-radius: 16px; cursor: pointer; }
+  .btn-retry:active { background: #222; }
+</style>
+</head>
+<body>
+
+<!-- 首页 -->
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <span class="hero-emoji">💼</span>
+    <div class="hero-title">霍兰德职业兴趣测试</div>
+    <div class="hero-sub">基于 John Holland 职业兴趣理论<br>发现你真正适合的职业方向</div>
+  </div>
+  <div class="intro-card">
+    <div class="intro-row"><div class="intro-dot"></div><div class="intro-text">共 <strong style="color:#eee">42 道题</strong>，约 5 分钟完成</div></div>
+    <div class="intro-row"><div class="intro-dot"></div><div class="intro-text">测出你的 <strong style="color:#eee">RIASEC 六维兴趣</strong> 组合</div></div>
+    <div class="intro-row"><div class="intro-dot"></div><div class="intro-text">匹配最适合你的 <strong style="color:#eee">职业方向与代表职业</strong></div></div>
+    <div class="intro-row"><div class="intro-dot"></div><div class="intro-text">每题选「喜欢」「一般」「不喜欢」，凭直觉作答</div></div>
+  </div>
+  <button class="btn-start" onclick="startTest()">开始测试</button>
+</div>
+
+<!-- 答题页 -->
+<div class="screen" id="screen-test">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="q-header">
+    <div class="q-num">第 <span id="q-cur">1</span> / <span id="q-total">42</span> 题</div>
+  </div>
+  <div class="q-body">
+    <div class="q-text" id="q-text"></div>
+    <div class="q-tip">你对这项活动的感受是？</div>
+  </div>
+  <div class="options">
+    <div class="opt" id="opt-0" onclick="selectOpt(0)">
+      <div class="opt-letter">A</div>
+      <div class="opt-text">喜欢 / 擅长</div>
+    </div>
+    <div class="opt" id="opt-1" onclick="selectOpt(1)">
+      <div class="opt-letter">B</div>
+      <div class="opt-text">一般 / 说不准</div>
+    </div>
+    <div class="opt" id="opt-2" onclick="selectOpt(2)">
+      <div class="opt-letter">C</div>
+      <div class="opt-text">不喜欢 / 不擅长</div>
+    </div>
+  </div>
+</div>
+
+<!-- 结果页 -->
+<div class="screen" id="screen-result">
+  <div class="result-hero">
+    <span class="result-emoji" id="r-emoji"></span>
+    <div class="result-type" id="r-type"></div>
+    <div class="result-name" id="r-name"></div>
+    <div class="result-slogan" id="r-slogan"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">📊 六维得分</div>
+    <div class="score-bars" id="score-bars"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">🧬 人格特质</div>
+    <div class="rc-text" id="r-desc"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">💡 适合职业</div>
+    <div class="careers" id="r-careers"></div>
+  </div>
+  <button class="btn-retry" onclick="retry()">🔄 重新测试</button>
+</div>
+
+<script>
+// ── 题库：42题，每题对应一个 RIASEC 维度 ──
+const QUESTIONS = [
+  // R - 现实型
+  { text: '修理家用电器或机械设备', dim: 'R' },
+  { text: '使用工具或机器进行手工操作', dim: 'R' },
+  { text: '户外体力劳动（如建筑、农业）', dim: 'R' },
+  { text: '驾驶或操作大型机械设备', dim: 'R' },
+  { text: '组装或拆卸机械零件', dim: 'R' },
+  { text: '参与体育运动或体能训练', dim: 'R' },
+  { text: '制作或维修木工、金属制品', dim: 'R' },
+  // I - 研究型
+  { text: '研究科学问题或做实验', dim: 'I' },
+  { text: '阅读学术文章或科普书籍', dim: 'I' },
+  { text: '分析数据、寻找规律', dim: 'I' },
+  { text: '思考复杂的理论问题', dim: 'I' },
+  { text: '独立钻研某个专业领域', dim: 'I' },
+  { text: '用逻辑推理解决难题', dim: 'I' },
+  { text: '探索未知领域或新知识', dim: 'I' },
+  // A - 艺术型
+  { text: '创作音乐、绘画或文学作品', dim: 'A' },
+  { text: '参与戏剧、舞蹈或表演', dim: 'A' },
+  { text: '设计海报、界面或空间', dim: 'A' },
+  { text: '用创意方式表达自己的想法', dim: 'A' },
+  { text: '欣赏或评论艺术作品', dim: 'A' },
+  { text: '写作（故事、诗歌、文案等）', dim: 'A' },
+  { text: '摄影或视频创作', dim: 'A' },
+  // S - 社会型
+  { text: '帮助他人解决生活或情感问题', dim: 'S' },
+  { text: '教导或培训他人', dim: 'S' },
+  { text: '参与志愿服务或公益活动', dim: 'S' },
+  { text: '倾听朋友的烦恼并给予建议', dim: 'S' },
+  { text: '组织团队活动或集体项目', dim: 'S' },
+  { text: '在医疗、护理或心理领域工作', dim: 'S' },
+  { text: '与不同背景的人沟通交流', dim: 'S' },
+  // E - 企业型
+  { text: '说服他人接受你的观点', dim: 'E' },
+  { text: '领导团队完成目标', dim: 'E' },
+  { text: '参与商业谈判或销售', dim: 'E' },
+  { text: '制定计划并推动执行', dim: 'E' },
+  { text: '在竞争环境中争取第一', dim: 'E' },
+  { text: '管理项目或团队资源', dim: 'E' },
+  { text: '创业或开展新业务', dim: 'E' },
+  // C - 传统型
+  { text: '整理文件、数据或档案', dim: 'C' },
+  { text: '按照规定流程完成工作', dim: 'C' },
+  { text: '做账、记录或统计数字', dim: 'C' },
+  { text: '在有明确规则的环境中工作', dim: 'C' },
+  { text: '检查文件或数据的准确性', dim: 'C' },
+  { text: '制作表格、报告或规范文档', dim: 'C' },
+  { text: '维护系统或流程的稳定运行', dim: 'C' }
+]
+
+// ── 六种人格类型定义 ──
+const TYPES = {
+  R: { name: '现实型', emoji: '🔧', color: '#ff8a65', slogan: '用双手改变世界，脚踏实地才是真。', desc: '你是一个务实、踏实的人，喜欢与工具、机械、自然打交道。你更偏好具体的、可见的工作成果，而非抽象的理论。你动手能力强，有耐心，在需要技术和体力的领域往往表现出色。', careers: ['工程师', '建筑师', '机械师', '飞行员', '厨师', '运动员', '农业专家', '电工'] },
+  I: { name: '研究型', emoji: '🔬', color: '#80deea', slogan: '世界是一道题，我来解它。', desc: '你是一个好奇心旺盛、喜欢独立思考的人。你享受分析问题、探索规律的过程，对知识有强烈的渴望。你更喜欢用脑力解决问题，在科学、技术、学术领域往往如鱼得水。', careers: ['科学家', '医生', '程序员', '数据分析师', '研究员', '经济学家', '心理学家', '教授'] },
+  A: { name: '艺术型', emoji: '🎨', color: '#f48fb1', slogan: '美是我的语言，创造是我的呼吸。', desc: '你是一个富有创造力和想象力的人，喜欢通过艺术、文字、音乐等方式表达自我。你不喜欢被条条框框束缚，追求自由和个性。你对美有独特的感知，在创意领域往往能发光发热。', careers: ['设计师', '作家', '音乐人', '演员', '摄影师', '广告创意', '游戏策划', '建筑设计师'] },
+  S: { name: '社会型', emoji: '🤝', color: '#a5d6a7', slogan: '帮助别人，是我最大的成就感。', desc: '你是一个热情、善于沟通的人，喜欢与人打交道，关心他人的成长和福祉。你有很强的同理心，擅长倾听和引导。在教育、医疗、社会服务等需要人际互动的领域，你会找到真正的满足感。', careers: ['教师', '心理咨询师', '社工', '护士', 'HR', '培训师', '公益工作者', '销售顾问'] },
+  E: { name: '企业型', emoji: '👔', color: '#ffd600', slogan: '目标就是用来超越的。', desc: '你是一个有野心、善于领导的人，喜欢影响他人、推动事情发生。你有很强的行动力和说服力，在竞争环境中往往能激发出最好的状态。商业、管理、政治等领域是你的主场。', careers: ['企业家', '销售总监', '项目经理', '律师', '政治家', '投资人', '市场总监', '创业者'] },
+  C: { name: '传统型', emoji: '📋', color: '#b0bec5', slogan: '秩序是效率的基础，细节决定成败。', desc: '你是一个严谨、有条理的人，喜欢在有明确规则和流程的环境中工作。你注重细节，做事认真负责，擅长处理数据、文件和系统性工作。在需要精确性和可靠性的领域，你是不可或缺的存在。', careers: ['会计师', '审计师', '行政管理', '数据录入', '档案管理', '银行职员', '统计师', '质检员'] }
+}
+
+const DIM_ORDER = ['R', 'I', 'A', 'S', 'E', 'C']
+let scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 }
+let curIdx = 0
+let answers = []
+
+function startTest() {
+  scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 }
+  curIdx = 0
+  answers = new Array(QUESTIONS.length).fill(-1)
+  showScreen('screen-test')
+  renderQ()
+}
+
+function renderQ() {
+  const q = QUESTIONS[curIdx]
+  document.getElementById('q-text').textContent = q.text
+  document.getElementById('q-cur').textContent = curIdx + 1
+  document.getElementById('q-total').textContent = QUESTIONS.length
+  document.getElementById('progress-fill').style.width = (curIdx / QUESTIONS.length * 100) + '%'
+  // 恢复已选
+  ;[0,1,2].forEach(i => {
+    document.getElementById('opt-' + i).classList.toggle('selected', answers[curIdx] === i)
+  })
+}
+
+function selectOpt(idx) {
+  // 记录答案
+  const prev = answers[curIdx]
+  answers[curIdx] = idx
+  const dim = QUESTIONS[curIdx].dim
+  // 分值：喜欢=2，一般=1，不喜欢=0
+  if (prev !== -1) scores[dim] -= (prev === 0 ? 2 : prev === 1 ? 1 : 0)
+  scores[dim] += (idx === 0 ? 2 : idx === 1 ? 1 : 0)
+
+  ;[0,1,2].forEach(i => document.getElementById('opt-' + i).classList.toggle('selected', i === idx))
+
+  setTimeout(() => {
+    if (curIdx < QUESTIONS.length - 1) {
+      curIdx++
+      renderQ()
+    } else {
+      showResult()
+    }
+  }, 200)
+}
+
+function showResult() {
+  // 找最高分类型
+  const sorted = DIM_ORDER.slice().sort((a, b) => scores[b] - scores[a])
+  const top = sorted[0]
+  const t = TYPES[top]
+  const maxScore = 7 * 2 // 每维度7题，每题最高2分
+
+  document.getElementById('r-emoji').textContent = t.emoji
+  document.getElementById('r-type').textContent = top + ' · ' + t.name
+  document.getElementById('r-name').textContent = t.name
+  document.getElementById('r-slogan').textContent = '"' + t.slogan + '"'
+  document.getElementById('r-desc').textContent = t.desc
+
+  // 职业标签
+  const careersEl = document.getElementById('r-careers')
+  careersEl.innerHTML = t.careers.map(c => `<span class="career-tag">${c}</span>`).join('')
+
+  // 六维得分条
+  const barsEl = document.getElementById('score-bars')
+  barsEl.innerHTML = DIM_ORDER.map(d => {
+    const pct = Math.round(scores[d] / maxScore * 100)
+    const color = TYPES[d].color
+    return `<div class="score-row">
+      <div class="score-label">${d}</div>
+      <div class="score-track"><div class="score-fill" style="width:0%;background:${color}" data-pct="${pct}"></div></div>
+      <div class="score-val">${scores[d]}</div>
+    </div>`
+  }).join('')
+
+  showScreen('screen-result')
+
+  // 动画
+  setTimeout(() => {
+    document.querySelectorAll('.score-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%'
+    })
+  }, 100)
+}
+
+function retry() {
+  showScreen('screen-home')
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo(0, 0)
+}
+</script>
+</body>
+</html>

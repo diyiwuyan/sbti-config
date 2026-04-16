@@ -1,0 +1,56 @@
+[
+  {
+    "id": "holland",
+    "title": "霍兰德职业兴趣测试",
+    "desc": "发现你真正适合的职业方向",
+    "emoji": "💼",
+    "color": "#4fc3f7",
+    "tag": "职业",
+    "url": "https://diyiwuyan.github.io/sbti-config/tests/holland.html"
+  },
+  {
+    "id": "mbti",
+    "title": "MBTI 人格测试",
+    "desc": "16种人格，你是哪一种？",
+    "emoji": "🧩",
+    "color": "#ce93d8",
+    "tag": "人格",
+    "url": "https://diyiwuyan.github.io/sbti-config/tests/mbti.html"
+  },
+  {
+    "id": "pdp",
+    "title": "PDP 性格测试",
+    "desc": "老虎/孔雀/考拉/猫头鹰/变色龙",
+    "emoji": "🐯",
+    "color": "#ffb74d",
+    "tag": "性格",
+    "url": "https://diyiwuyan.github.io/sbti-config/tests/pdp.html"
+  },
+  {
+    "id": "animal",
+    "title": "你是什么动物？",
+    "desc": "灵魂深处住着哪种野兽",
+    "emoji": "🦁",
+    "color": "#81c784",
+    "tag": "趣味",
+    "url": "https://diyiwuyan.github.io/sbti-config/tests/animal.html"
+  },
+  {
+    "id": "marvel",
+    "title": "你是哪位漫威英雄？",
+    "desc": "钢铁侠？美队？还是灭霸？",
+    "emoji": "🦸",
+    "color": "#ef5350",
+    "tag": "趣味",
+    "url": "https://diyiwuyan.github.io/sbti-config/tests/marvel.html"
+  },
+  {
+    "id": "niuma",
+    "title": "你是什么牛马？",
+    "desc": "打工人灵魂拷问",
+    "emoji": "🐴",
+    "color": "#a1887f",
+    "tag": "趣味",
+    "url": "https://diyiwuyan.github.io/sbti-config/tests/niuma.html"
+  }
+]
