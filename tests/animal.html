@@ -45,6 +45,17 @@
   .compat { display: flex; gap: 12px; flex-wrap: wrap; }
   .compat-item { background: #252525; border-radius: 12px; padding: 10px 16px; font-size: 14px; color: #aaa; }
   .btn-retry { width: calc(100% - 48px); margin: 8px 24px 0; padding: 16px; background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 16px; font-weight: 700; border-radius: 16px; cursor: pointer; }
+
+  /* 分享图区域 */
+  .share-section { margin: 16px 24px 0; }
+  .share-section-title { font-size: 13px; color: #555; font-weight: 700; letter-spacing: 2px; margin-bottom: 10px; text-align: center; }
+  .share-img-wrap { position: relative; border-radius: 16px; overflow: hidden; }
+  .share-img-wrap img { width: 100%; display: block; border-radius: 16px; }
+  .share-hint { text-align: center; font-size: 12px; color: #555; margin-top: 8px; }
+  .share-generating { text-align: center; padding: 40px 0; color: #555; font-size: 14px; }
+
+  /* 返回测多多按钮 */
+  .btn-home { width: calc(100% - 48px); margin: 12px 24px 40px; padding: 16px; background: linear-gradient(135deg, #ff6b35, #ff8c42); color: #fff; font-size: 16px; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -93,6 +104,21 @@
     <div class="compat" id="r-compat"></div>
   </div>
   <button class="btn-retry" onclick="retry()">🔄 重新测试</button>
+
+  <!-- 分享图 -->
+  <div class="share-section" id="share-section">
+    <div class="share-generating" id="share-generating">🎨 生成分享图中…</div>
+    <div id="share-img-area" style="display:none">
+      <div class="share-section-title">📸 长按图片保存到相册</div>
+      <div class="share-img-wrap">
+        <img id="share-img" src="" alt="分享图">
+      </div>
+      <div class="share-hint">长按图片 → 保存图片 → 发朋友圈</div>
+    </div>
+  </div>
+
+  <!-- 返回测多多 -->
+  <button class="btn-home" onclick="goHome()">🏠 返回测多多</button>
 </div>
 
 <script>
@@ -193,9 +219,142 @@ function showResult() {
   document.getElementById('r-traits').innerHTML = t.traits.map(s => `<span class="trait">${s}</span>`).join('')
   document.getElementById('r-compat').innerHTML = t.compat.map(s => `<div class="compat-item">${s}</div>`).join('')
   showScreen('screen-result')
+
+  // 通知小程序分享标题
+  try {
+    wx.miniProgram.postMessage({ data: { result: `我的灵魂动物是${t.emoji}${t.name}` } })
+  } catch(e) {}
+
+  // 生成分享图
+  setTimeout(() => generateShareImg(t), 300)
+}
+
+function generateShareImg(t) {
+  const canvas = document.createElement('canvas')
+  const W = 750, H = 1000
+  canvas.width = W; canvas.height = H
+  const ctx = canvas.getContext('2d')
+
+  // 背景
+  ctx.fillStyle = '#0d0d0d'
+  ctx.fillRect(0, 0, W, H)
+
+  // 顶部光晕
+  const grd = ctx.createRadialGradient(W/2, 0, 0, W/2, 0, H*0.55)
+  grd.addColorStop(0, '#81c78440')
+  grd.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = grd
+  ctx.fillRect(0, 0, W, H)
+
+  // 卡片
+  ctx.fillStyle = '#1a1a1a'
+  roundRect(ctx, 30, 30, W-60, H-60, 36)
+  ctx.fill()
+
+  // emoji
+  ctx.font = '140px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(t.emoji, W/2, 200)
+
+  // 标签
+  ctx.font = 'bold 26px sans-serif'
+  ctx.fillStyle = '#81c784'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('你的灵魂动物', W/2, 320)
+
+  // 名字
+  ctx.font = 'bold 80px sans-serif'
+  ctx.fillStyle = '#ffffff'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(t.name, W/2, 410)
+
+  // slogan
+  ctx.font = '30px sans-serif'
+  ctx.fillStyle = '#888'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'top'
+  wrapText(ctx, `"${t.slogan}"`, W/2, 470, W-120, 44, 'center')
+
+  // 分割线
+  ctx.strokeStyle = '#2a2a2a'
+  ctx.lineWidth = 2
+  ctx.beginPath(); ctx.moveTo(60, 580); ctx.lineTo(W-60, 580); ctx.stroke()
+
+  // 特质标签
+  const tags = t.traits
+  let totalW = 0
+  ctx.font = '24px sans-serif'
+  tags.forEach(tag => { totalW += ctx.measureText(tag).width + 40 })
+  totalW += (tags.length - 1) * 16
+  let tx = (W - totalW) / 2
+  tags.forEach(tag => {
+    const tw = ctx.measureText(tag).width + 40
+    ctx.fillStyle = '#81c78422'
+    roundRect(ctx, tx, 600, tw, 48, 24); ctx.fill()
+    ctx.strokeStyle = '#81c78444'; ctx.lineWidth = 1
+    roundRect(ctx, tx, 600, tw, 48, 24); ctx.stroke()
+    ctx.fillStyle = '#81c784'
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillText(tag, tx + tw/2, 624)
+    tx += tw + 16
+  })
+
+  // 底部品牌
+  ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = 2
+  ctx.beginPath(); ctx.moveTo(60, H-130); ctx.lineTo(W-60, H-130); ctx.stroke()
+  ctx.font = 'bold 28px sans-serif'
+  ctx.fillStyle = '#81c784'
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
+  ctx.fillText('测多多', 60, H-90)
+  ctx.font = '22px sans-serif'
+  ctx.fillStyle = '#555'
+  ctx.fillText('更多有趣测试，扫码来玩', 60, H-58)
+
+  // 右侧二维码占位（文字替代）
+  ctx.font = 'bold 22px sans-serif'
+  ctx.fillStyle = '#444'
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle'
+  ctx.fillText('扫码测试', W-60, H-74)
+
+  const dataUrl = canvas.toDataURL('image/png')
+  document.getElementById('share-generating').style.display = 'none'
+  document.getElementById('share-img').src = dataUrl
+  document.getElementById('share-img-area').style.display = 'block'
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath()
+  ctx.moveTo(x+r, y)
+  ctx.lineTo(x+w-r, y)
+  ctx.arcTo(x+w, y, x+w, y+r, r)
+  ctx.lineTo(x+w, y+h-r)
+  ctx.arcTo(x+w, y+h, x+w-r, y+h, r)
+  ctx.lineTo(x+r, y+h)
+  ctx.arcTo(x, y+h, x, y+h-r, r)
+  ctx.lineTo(x, y+r)
+  ctx.arcTo(x, y, x+r, y, r)
+  ctx.closePath()
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH, align) {
+  ctx.textAlign = align || 'left'
+  let line = '', curY = y
+  for (const ch of text) {
+    const test = line + ch
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, x, curY); line = ch; curY += lineH
+    } else { line = test }
+  }
+  if (line) ctx.fillText(line, x, curY)
 }
 
 function retry() { showScreen('screen-home') }
+function goHome() {
+  try { wx.miniProgram.switchTab({ url: '/pages/more/more' }) } catch(e) { history.back() }
+}
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
   document.getElementById(id).classList.add('active')

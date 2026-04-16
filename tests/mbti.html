@@ -66,6 +66,12 @@
   .type-name { font-size: 12px; color: #666; }
 
   .btn-retry { width: calc(100% - 48px); margin: 8px 24px 0; padding: 16px; background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 16px; font-weight: 700; border-radius: 16px; cursor: pointer; }
+.share-section { margin: 16px 24px 0; }
+.share-section-title { font-size: 13px; color: #555; font-weight: 700; letter-spacing: 2px; margin-bottom: 10px; text-align: center; }
+.share-img-wrap img { width: 100%; display: block; border-radius: 16px; }
+.share-hint { text-align: center; font-size: 12px; color: #555; margin-top: 8px; }
+.share-generating { text-align: center; padding: 40px 0; color: #555; font-size: 14px; }
+.btn-home { width: calc(100% - 48px); margin: 12px 24px 40px; padding: 16px; background: linear-gradient(135deg, #ff6b35, #ff8c42); color: #fff; font-size: 16px; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -117,6 +123,15 @@
     <div class="rc-text" id="r-famous"></div>
   </div>
   <button class="btn-retry" onclick="retry()">🔄 重新测试</button>
+<div class="share-section" id="share-section">
+  <div class="share-generating" id="share-generating">🎨 生成分享图中…</div>
+  <div id="share-img-area" style="display:none">
+    <div class="share-section-title">📸 长按图片保存到相册</div>
+    <div class="share-img-wrap"><img id="share-img" src="" alt="分享图"></div>
+    <div class="share-hint">长按图片 → 保存图片 → 发朋友圈</div>
+  </div>
+</div>
+<button class="btn-home" onclick="goHome()">🏠 返回测多多</button>
 </div>
 
 <script>
@@ -264,9 +279,73 @@ function showResult() {
   setTimeout(() => {
     document.querySelectorAll('.dim-fill').forEach(el => { el.style.width = el.dataset.pct + '%' })
   }, 100)
+
+  try { wx.miniProgram.postMessage({ data: { result: `我的MBTI是${t.emoji}${code} ${t.name}` } }) } catch(e) {}
+  setTimeout(() => generateShareImg(t, code), 400)
+}
+
+function generateShareImg(t, code) {
+  const canvas = document.createElement('canvas')
+  const W = 750, H = 1000
+  canvas.width = W; canvas.height = H
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#0d0d0d'; ctx.fillRect(0, 0, W, H)
+  const grd = ctx.createRadialGradient(W/2, 0, 0, W/2, 0, H*0.55)
+  grd.addColorStop(0, '#ce93d840'); grd.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H)
+  ctx.fillStyle = '#1a1a1a'; roundRect(ctx, 30, 30, W-60, H-60, 36); ctx.fill()
+
+  ctx.font = '130px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  ctx.fillText(t.emoji, W/2, 195)
+
+  ctx.fillStyle = '#ce93d822'; roundRect(ctx, W/2-100, 270, 200, 52, 26); ctx.fill()
+  ctx.strokeStyle = '#ce93d855'; ctx.lineWidth = 1; roundRect(ctx, W/2-100, 270, 200, 52, 26); ctx.stroke()
+  ctx.font = 'bold 28px monospace'; ctx.fillStyle = '#ce93d8'
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(code, W/2, 296)
+
+  ctx.font = 'bold 72px sans-serif'; ctx.fillStyle = '#fff'
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t.name, W/2, 390)
+
+  ctx.font = '28px sans-serif'; ctx.fillStyle = '#888'
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'
+  wrapText(ctx, `"${t.slogan}"`, W/2, 445, W-120, 42, 'center')
+
+  ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = 2
+  ctx.beginPath(); ctx.moveTo(60, H-130); ctx.lineTo(W-60, H-130); ctx.stroke()
+  ctx.font = 'bold 28px sans-serif'; ctx.fillStyle = '#ce93d8'
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('测多多', 60, H-90)
+  ctx.font = '22px sans-serif'; ctx.fillStyle = '#555'
+  ctx.fillText('更多有趣测试，扫码来玩', 60, H-58)
+  ctx.font = 'bold 22px sans-serif'; ctx.fillStyle = '#444'
+  ctx.textAlign = 'right'; ctx.fillText('扫码测试', W-60, H-74)
+
+  const dataUrl = canvas.toDataURL('image/png')
+  document.getElementById('share-generating').style.display = 'none'
+  document.getElementById('share-img').src = dataUrl
+  document.getElementById('share-img-area').style.display = 'block'
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y)
+  ctx.arcTo(x+w, y, x+w, y+r, r); ctx.lineTo(x+w, y+h-r)
+  ctx.arcTo(x+w, y+h, x+w-r, y+h, r); ctx.lineTo(x+r, y+h)
+  ctx.arcTo(x, y+h, x, y+h-r, r); ctx.lineTo(x, y+r)
+  ctx.arcTo(x, y, x+r, y, r); ctx.closePath()
+}
+function wrapText(ctx, text, x, y, maxW, lineH, align) {
+  ctx.textAlign = align || 'left'; let line = '', curY = y
+  for (const ch of text) {
+    const test = line + ch
+    if (ctx.measureText(test).width > maxW && line) { ctx.fillText(line, x, curY); line = ch; curY += lineH }
+    else { line = test }
+  }
+  if (line) ctx.fillText(line, x, curY)
 }
 
 function retry() { showScreen('screen-home') }
+function goHome() {
+  try { wx.miniProgram.switchTab({ url: '/pages/more/more' }) } catch(e) { history.back() }
+}
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
   document.getElementById(id).classList.add('active')
