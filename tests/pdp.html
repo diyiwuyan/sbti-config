@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PDP 性格测试</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #0d0d0d; color: #eee; font-family: -apple-system, 'PingFang SC', sans-serif; min-height: 100vh; }
+  .screen { display: none; padding: 0 24px 60px; }
+  .screen.active { display: block; }
+  .hero { padding: 60px 0 28px; text-align: center; }
+  .hero-emoji { font-size: 72px; display: block; margin-bottom: 20px; }
+  .hero-title { font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+  .hero-sub { font-size: 14px; color: #666; line-height: 1.7; }
+  .animal-row { display: flex; justify-content: center; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
+  .animal-chip { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 20px; padding: 8px 16px; font-size: 13px; color: #888; }
+  .btn-start { width: 100%; padding: 18px; background: linear-gradient(135deg, #ffb74d, #f57c00); color: #fff; font-size: 18px; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; margin-top: 8px; }
+
+  .progress-bar-wrap { height: 4px; background: #1a1a1a; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #ffb74d, #f57c00); transition: width 0.4s; }
+  .q-header { padding: 20px 24px 0; }
+  .q-num { font-size: 13px; color: #555; margin-bottom: 16px; }
+  .q-num span { color: #ffb74d; font-weight: 700; }
+  .q-text { font-size: 17px; color: #eee; line-height: 1.7; font-weight: 600; padding: 0 24px 20px; }
+  .q-tip { font-size: 13px; color: #555; padding: 0 24px 12px; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 40px; }
+  .opt { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
+  .opt:active { background: #222; }
+  .opt.selected { border-color: #ffb74d; background: #ffb74d22; }
+  .opt-letter { width: 30px; height: 30px; border-radius: 50%; background: #252525; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #666; flex-shrink: 0; }
+  .opt.selected .opt-letter { background: #ffb74d; color: #000; }
+  .opt-text { font-size: 15px; color: #ccc; line-height: 1.5; flex: 1; }
+
+  .result-hero { text-align: center; padding: 48px 24px 24px; }
+  .result-animal { font-size: 80px; display: block; margin-bottom: 12px; }
+  .result-type { font-size: 13px; color: #ffb74d; font-weight: 700; letter-spacing: 2px; margin-bottom: 8px; }
+  .result-name { font-size: 34px; font-weight: 900; color: #fff; margin-bottom: 12px; }
+  .result-slogan { font-size: 15px; color: #888; font-style: italic; line-height: 1.6; }
+
+  .result-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; margin: 0 24px 16px; }
+  .rc-title { font-size: 13px; font-weight: 700; color: #555; letter-spacing: 2px; margin-bottom: 14px; }
+  .rc-text { font-size: 14px; color: #aaa; line-height: 1.8; }
+
+  .score-chart { display: flex; flex-direction: column; gap: 12px; }
+  .sc-row { display: flex; align-items: center; gap: 10px; }
+  .sc-animal { font-size: 20px; width: 28px; flex-shrink: 0; }
+  .sc-name { font-size: 13px; color: #888; width: 48px; flex-shrink: 0; }
+  .sc-track { flex: 1; height: 8px; background: #252525; border-radius: 4px; overflow: hidden; }
+  .sc-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .sc-val { font-size: 13px; color: #666; width: 24px; text-align: right; flex-shrink: 0; }
+
+  .traits { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .trait { background: #ffb74d22; border: 1px solid #ffb74d44; border-radius: 20px; padding: 5px 12px; font-size: 13px; color: #ffb74d; }
+  .trait.weak { background: #25252588; border-color: #333; color: #555; }
+
+  .btn-retry { width: calc(100% - 48px); margin: 8px 24px 0; padding: 16px; background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 16px; font-weight: 700; border-radius: 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <span class="hero-emoji">🐯</span>
+    <div class="hero-title">PDP 性格测试</div>
+    <div class="hero-sub">Professional DynaMetric Programs<br>用五种动物读懂你的性格</div>
+  </div>
+  <div class="animal-row">
+    <div class="animal-chip">🐯 老虎 · 支配型</div>
+    <div class="animal-chip">🦚 孔雀 · 表达型</div>
+    <div class="animal-chip">🐨 考拉 · 和平型</div>
+    <div class="animal-chip">🦉 猫头鹰 · 分析型</div>
+    <div class="animal-chip">🦎 变色龙 · 整合型</div>
+  </div>
+  <div class="result-card" style="margin: 0 0 16px;">
+    <div class="rc-title">📌 测试说明</div>
+    <div class="rc-text">共 25 道题，每题从 5 个选项中选最符合自己的一个。没有对错，凭直觉选择最真实的自己。</div>
+  </div>
+  <button class="btn-start" onclick="startTest()">开始测试</button>
+</div>
+
+<div class="screen" id="screen-test">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="q-header">
+    <div class="q-num">第 <span id="q-cur">1</span> / <span id="q-total">25</span> 题</div>
+  </div>
+  <div class="q-text" id="q-text"></div>
+  <div class="q-tip">选择最符合你的一项</div>
+  <div class="options" id="options-wrap"></div>
+</div>
+
+<div class="screen" id="screen-result">
+  <div class="result-hero">
+    <span class="result-animal" id="r-animal"></span>
+    <div class="result-type" id="r-type"></div>
+    <div class="result-name" id="r-name"></div>
+    <div class="result-slogan" id="r-slogan"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">📊 五维得分</div>
+    <div class="score-chart" id="score-chart"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">✅ 你的优势</div>
+    <div class="traits" id="r-strengths"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">⚠️ 成长空间</div>
+    <div class="traits" id="r-weaknesses"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">🧬 性格解析</div>
+    <div class="rc-text" id="r-desc"></div>
+  </div>
+  <button class="btn-retry" onclick="retry()">🔄 重新测试</button>
+</div>
+
+<script>
+// 每题5个选项，对应 Tiger/Peacock/Koala/Owl/Chameleon
+const QUESTIONS = [
+  { text: '在团队中，你通常扮演什么角色？',
+    opts: ['推动者，负责拍板和推进', '活跃气氛，激励大家', '协调者，维持团队和谐', '分析师，确保方案严谨', '灵活适应，哪里需要去哪里'] },
+  { text: '面对一个新项目，你第一反应是？',
+    opts: ['立刻制定目标和计划', '脑洞大开，想各种可能性', '先了解团队的想法和感受', '收集数据，评估风险', '看情况，先观察再行动'] },
+  { text: '你最讨厌哪种工作状态？',
+    opts: ['效率低下、拖拖拉拉', '死板无聊、没有创意', '冷漠疏离、缺乏温度', '粗心大意、不够严谨', '极端固执、不懂变通'] },
+  { text: '别人眼中的你通常是？',
+    opts: ['果断、强势、有领导力', '热情、有感染力、爱表达', '温和、可靠、好相处', '严谨、冷静、有条理', '灵活、随和、难以捉摸'] },
+  { text: '你做决定时最看重？',
+    opts: ['结果和效率', '创意和可能性', '团队感受和关系', '数据和逻辑', '综合平衡各方因素'] },
+  { text: '压力大时，你更倾向于？',
+    opts: ['更加专注，加速推进', '找人倾诉，寻求支持', '保持平静，默默消化', '分析原因，制定对策', '调整策略，灵活应对'] },
+  { text: '你的办公桌/工作空间通常是？',
+    opts: ['简洁，只放必要的东西', '有点乱，但充满个性', '整洁温馨，有些小摆件', '非常有序，分类清晰', '随时变化，看心情'] },
+  { text: '你更喜欢哪种沟通方式？',
+    opts: ['直接说重点，不废话', '聊天式，边聊边想', '耐心倾听，照顾感受', '有逻辑，有数据支撑', '根据对象调整方式'] },
+  { text: '你最享受哪种成就感？',
+    opts: ['完成了一个有挑战的目标', '创造了让人眼前一亮的东西', '帮助别人解决了问题', '做出了一个完美无缺的方案', '在复杂局面中找到了平衡'] },
+  { text: '你对"规则"的态度是？',
+    opts: ['规则是用来打破的，结果最重要', '规则太多会扼杀创意', '规则有助于维护关系和秩序', '规则是必要的，要严格遵守', '规则要灵活，视情况而定'] },
+  { text: '你在会议中通常？',
+    opts: ['主导讨论，推动结论', '提出新想法，活跃气氛', '确保每个人都被听到', '提出质疑，要求数据支撑', '综合各方意见，寻求共识'] },
+  { text: '你最害怕的事情是？',
+    opts: ['失去控制和主导权', '被忽视，没有存在感', '关系破裂，失去和谐', '犯错，被人认为不专业', '被迫做出非此即彼的选择'] },
+  { text: '你学习新技能时更喜欢？',
+    opts: ['直接上手，边做边学', '找有趣的方式，游戏化学习', '跟着老师或同伴一起学', '系统学习，打好理论基础', '多种方式结合，灵活切换'] },
+  { text: '你对"完美"的态度是？',
+    opts: ['完成比完美更重要', '完美是一种创意追求', '完美不如让大家都满意', '不完美就不能发布', '完美是相对的，要看场景'] },
+  { text: '你更擅长？',
+    opts: ['快速决策，推动执行', '激发灵感，影响他人', '建立信任，维护关系', '深度分析，规避风险', '整合资源，协调各方'] },
+  { text: '你的时间管理风格是？',
+    opts: ['高效紧凑，分秒必争', '随性，灵感来了就冲', '留出时间陪伴重要的人', '严格按计划，不喜欢变动', '弹性安排，随时调整'] },
+  { text: '你更倾向于哪种反馈方式？',
+    opts: ['直接说问题，越快越好', '鼓励为主，顺带提建议', '私下温和地沟通', '书面反馈，有据可查', '根据对方状态调整方式'] },
+  { text: '你对"变化"的态度是？',
+    opts: ['变化是机会，我来主导', '变化很刺激，我喜欢', '变化让我有点不安', '变化需要充分评估', '变化是常态，适应就好'] },
+  { text: '你更喜欢哪种工作环境？',
+    opts: ['竞争激烈，结果导向', '开放自由，鼓励创新', '温暖协作，重视关系', '严谨规范，流程清晰', '多元灵活，因地制宜'] },
+  { text: '你处理冲突的方式是？',
+    opts: ['直接对抗，解决问题', '用幽默化解，转移注意力', '尽量回避，维持和平', '分析原因，找出根本问题', '居中调解，寻求共赢'] },
+  { text: '你更看重哪种关系？',
+    opts: ['能一起打拼的战友', '能一起玩耍的伙伴', '能互相依靠的家人', '能互相学习的同道', '能互补合作的搭档'] },
+  { text: '你的演讲/表达风格是？',
+    opts: ['简洁有力，直击要点', '生动有趣，充满感染力', '温和亲切，注重互动', '严谨详细，逻辑清晰', '因人而异，灵活调整'] },
+  { text: '你对"失败"的态度是？',
+    opts: ['快速复盘，立刻重来', '失败是故事的一部分', '失败让我担心影响关系', '失败说明哪里没做好，要分析', '失败是调整方向的信号'] },
+  { text: '你最大的动力来源是？',
+    opts: ['赢得竞争，达成目标', '被认可，受到关注', '让身边的人幸福', '把事情做到极致', '找到最优解，实现平衡'] },
+  { text: '你理想中的一天是？',
+    opts: ['高效完成一堆重要任务', '有创意的工作+社交活动', '陪伴家人朋友，轻松愉快', '深度专注，完成一件精品', '多样化，每个时段都不同'] }
+]
+
+const ANIMALS = {
+  T: { name: '老虎', emoji: '🐯', type: '支配型 Tiger', color: '#ef5350', slogan: '我来，我见，我征服。', desc: '你是天生的领导者，目标感极强，行动力惊人。你不喜欢拖延和低效，在压力下反而更能激发潜能。你的直接和果断让你在竞争环境中脱颖而出，但有时需要注意照顾他人感受。', strengths: ['决断力强', '目标明确', '执行力超强', '抗压能力强', '天生领袖'], weaknesses: ['有时过于强势', '缺乏耐心', '忽视细节', '不善倾听'] },
+  P: { name: '孔雀', emoji: '🦚', type: '表达型 Peacock', color: '#ab47bc', slogan: '让我来，我能让这里更精彩。', desc: '你是天生的表演者和激励者，充满热情和感染力。你享受成为焦点，善于用语言和情感影响他人。你的创意和乐观让团队充满活力，但有时需要更注重细节和跟进。', strengths: ['感染力强', '创意丰富', '善于激励', '社交能力强', '乐观积极'], weaknesses: ['容易分心', '不够严谨', '有时夸大', '跟进不足'] },
+  K: { name: '考拉', emoji: '🐨', type: '和平型 Koala', color: '#66bb6a', slogan: '大家好，才是真的好。', desc: '你是团队的黏合剂，温和、可靠、善于倾听。你重视和谐关系，能感知到每个人的情绪并照顾到位。你的稳定性让人信赖，但有时需要更勇敢地表达自己的需求和意见。', strengths: ['善于倾听', '维护和谐', '值得信赖', '有耐心', '共情能力强'], weaknesses: ['回避冲突', '难以拒绝', '决策慢', '容易妥协'] },
+  O: { name: '猫头鹰', emoji: '🦉', type: '分析型 Owl', color: '#42a5f5', slogan: '数据说话，逻辑为王。', desc: '你是天生的分析师，严谨、细致、追求完美。你在做决定前会收集大量信息，确保万无一失。你的专业性和可靠性让人放心，但有时需要接受"足够好"，避免过度分析导致行动迟缓。', strengths: ['严谨细致', '逻辑清晰', '专业可靠', '风险意识强', '追求卓越'], weaknesses: ['过度分析', '决策慢', '完美主义', '不够灵活'] },
+  C: { name: '变色龙', emoji: '🦎', type: '整合型 Chameleon', color: '#ffb74d', slogan: '我能适应一切，这就是我的超能力。', desc: '你是最灵活的性格类型，能根据情境快速调整自己的风格。你兼具多种特质，善于整合不同观点，在复杂局面中找到平衡。你的适应性是最大优势，但有时需要更坚定地表达自己的立场。', strengths: ['适应力强', '善于整合', '多面手', '协调能力强', '视角全面'], weaknesses: ['立场不够坚定', '有时难以捉摸', '缺乏鲜明特色', '容易妥协'] }
+}
+
+const KEYS = ['T', 'P', 'K', 'O', 'C']
+let scores = { T: 0, P: 0, K: 0, O: 0, C: 0 }
+let curIdx = 0
+let answers = []
+
+function startTest() {
+  scores = { T: 0, P: 0, K: 0, O: 0, C: 0 }
+  curIdx = 0
+  answers = new Array(QUESTIONS.length).fill(-1)
+  showScreen('screen-test')
+  renderQ()
+}
+
+function renderQ() {
+  const q = QUESTIONS[curIdx]
+  document.getElementById('q-text').textContent = q.text
+  document.getElementById('q-cur').textContent = curIdx + 1
+  document.getElementById('q-total').textContent = QUESTIONS.length
+  document.getElementById('progress-fill').style.width = (curIdx / QUESTIONS.length * 100) + '%'
+  document.getElementById('options-wrap').innerHTML = q.opts.map((opt, i) => `
+    <div class="opt ${answers[curIdx] === i ? 'selected' : ''}" onclick="selectOpt(${i})">
+      <div class="opt-letter">${String.fromCharCode(65 + i)}</div>
+      <div class="opt-text">${opt}</div>
+    </div>
+  `).join('')
+}
+
+function selectOpt(idx) {
+  const prev = answers[curIdx]
+  if (prev !== -1) scores[KEYS[prev]]--
+  answers[curIdx] = idx
+  scores[KEYS[idx]]++
+  document.querySelectorAll('.opt').forEach((el, i) => el.classList.toggle('selected', i === idx))
+  setTimeout(() => {
+    if (curIdx < QUESTIONS.length - 1) { curIdx++; renderQ() }
+    else showResult()
+  }, 200)
+}
+
+function showResult() {
+  const top = KEYS.reduce((a, b) => scores[a] >= scores[b] ? a : b)
+  const t = ANIMALS[top]
+  const maxScore = QUESTIONS.length
+
+  document.getElementById('r-animal').textContent = t.emoji
+  document.getElementById('r-type').textContent = t.type
+  document.getElementById('r-name').textContent = t.name
+  document.getElementById('r-slogan').textContent = '"' + t.slogan + '"'
+  document.getElementById('r-desc').textContent = t.desc
+  document.getElementById('r-strengths').innerHTML = t.strengths.map(s => `<span class="trait">${s}</span>`).join('')
+  document.getElementById('r-weaknesses').innerHTML = t.weaknesses.map(s => `<span class="trait weak">${s}</span>`).join('')
+
+  document.getElementById('score-chart').innerHTML = KEYS.map(k => {
+    const a = ANIMALS[k]
+    const pct = Math.round(scores[k] / maxScore * 100)
+    return `<div class="sc-row">
+      <div class="sc-animal">${a.emoji}</div>
+      <div class="sc-name">${a.name}</div>
+      <div class="sc-track"><div class="sc-fill" style="width:0%;background:${a.color}" data-pct="${pct}"></div></div>
+      <div class="sc-val">${scores[k]}</div>
+    </div>`
+  }).join('')
+
+  showScreen('screen-result')
+  setTimeout(() => {
+    document.querySelectorAll('.sc-fill').forEach(el => { el.style.width = el.dataset.pct + '%' })
+  }, 100)
+}
+
+function retry() { showScreen('screen-home') }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo(0, 0)
+}
+</script>
+</body>
+</html>

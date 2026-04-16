@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>你是什么动物？</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #0d0d0d; color: #eee; font-family: -apple-system, 'PingFang SC', sans-serif; min-height: 100vh; }
+  .screen { display: none; padding: 0 24px 60px; }
+  .screen.active { display: block; }
+  .hero { padding: 56px 0 24px; text-align: center; }
+  .hero-emoji { font-size: 72px; display: block; margin-bottom: 16px; }
+  .hero-title { font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+  .hero-sub { font-size: 14px; color: #666; line-height: 1.7; }
+  .animal-preview { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  .ap { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 10px 14px; font-size: 22px; text-align: center; }
+  .btn-start { width: 100%; padding: 18px; background: linear-gradient(135deg, #81c784, #388e3c); color: #fff; font-size: 18px; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; margin-top: 8px; }
+
+  .progress-bar-wrap { height: 4px; background: #1a1a1a; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #81c784, #388e3c); transition: width 0.4s; }
+  .q-header { padding: 20px 24px 0; }
+  .q-num { font-size: 13px; color: #555; margin-bottom: 4px; }
+  .q-num span { color: #81c784; font-weight: 700; }
+  .q-scene { font-size: 12px; color: #444; background: #1a1a1a; border-radius: 20px; padding: 4px 12px; display: inline-block; margin-bottom: 16px; }
+  .q-text { font-size: 17px; color: #eee; line-height: 1.7; font-weight: 600; padding: 0 24px 20px; }
+  .options { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 40px; }
+  .opt { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 16px 20px; cursor: pointer; transition: all 0.15s; }
+  .opt:active { background: #222; }
+  .opt.selected { border-color: #81c784; background: #81c78422; }
+  .opt-text { font-size: 15px; color: #ccc; line-height: 1.5; }
+
+  .result-hero { text-align: center; padding: 48px 24px 24px; }
+  .result-big { font-size: 96px; display: block; margin-bottom: 12px; animation: bounce 0.6s ease; }
+  @keyframes bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+  .result-label { font-size: 13px; color: #81c784; font-weight: 700; letter-spacing: 2px; margin-bottom: 8px; }
+  .result-name { font-size: 36px; font-weight: 900; color: #fff; margin-bottom: 12px; }
+  .result-slogan { font-size: 15px; color: #888; font-style: italic; line-height: 1.6; }
+
+  .result-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; margin: 0 24px 16px; }
+  .rc-title { font-size: 13px; font-weight: 700; color: #555; letter-spacing: 2px; margin-bottom: 14px; }
+  .rc-text { font-size: 14px; color: #aaa; line-height: 1.8; }
+  .trait-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .trait { background: #81c78422; border: 1px solid #81c78444; border-radius: 20px; padding: 5px 14px; font-size: 13px; color: #81c784; }
+  .compat { display: flex; gap: 12px; flex-wrap: wrap; }
+  .compat-item { background: #252525; border-radius: 12px; padding: 10px 16px; font-size: 14px; color: #aaa; }
+  .btn-retry { width: calc(100% - 48px); margin: 8px 24px 0; padding: 16px; background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 16px; font-weight: 700; border-radius: 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <span class="hero-emoji">🦁</span>
+    <div class="hero-title">你是什么动物？</div>
+    <div class="hero-sub">灵魂深处住着哪种野兽<br>12种动物，总有一个是你</div>
+  </div>
+  <div class="animal-preview">
+    <div class="ap">🦁</div><div class="ap">🐺</div><div class="ap">🦊</div><div class="ap">🐬</div>
+    <div class="ap">🦅</div><div class="ap">🐘</div><div class="ap">🦋</div><div class="ap">🐢</div>
+    <div class="ap">🐆</div><div class="ap">🦉</div><div class="ap">🐬</div><div class="ap">🦔</div>
+  </div>
+  <button class="btn-start" onclick="startTest()">开始测试</button>
+</div>
+
+<div class="screen" id="screen-test">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="q-header">
+    <div class="q-num">第 <span id="q-cur">1</span> / <span id="q-total">15</span> 题</div>
+    <div class="q-scene" id="q-scene"></div>
+  </div>
+  <div class="q-text" id="q-text"></div>
+  <div class="options" id="options-wrap"></div>
+</div>
+
+<div class="screen" id="screen-result">
+  <div class="result-hero">
+    <span class="result-big" id="r-emoji"></span>
+    <div class="result-label">你的灵魂动物</div>
+    <div class="result-name" id="r-name"></div>
+    <div class="result-slogan" id="r-slogan"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">🧬 动物解析</div>
+    <div class="rc-text" id="r-desc"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">✨ 你的特质</div>
+    <div class="trait-row" id="r-traits"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">💞 灵魂伴侣 & 天敌</div>
+    <div class="compat" id="r-compat"></div>
+  </div>
+  <button class="btn-retry" onclick="retry()">🔄 重新测试</button>
+</div>
+
+<script>
+const QUESTIONS = [
+  { scene: '🌅 清晨', text: '早上醒来，你的第一个念头是？',
+    opts: [['立刻起床，今天有很多事要做', 'lion'], ['再躺一会儿，想想今天的计划', 'owl'], ['看看手机，刷刷消息', 'dolphin'], ['随便，起来再说', 'fox'], ['好想继续睡…', 'hedgehog']] },
+  { scene: '👥 社交', text: '在一个陌生人很多的派对上，你通常？',
+    opts: [['主动认识新朋友，越多越好', 'lion'], ['找个角落观察，等有缘分的人来', 'owl'], ['跟着朋友走，不主动也不回避', 'elephant'], ['找最有趣的人聊，不在乎其他', 'fox'], ['找个借口早点离开', 'hedgehog']] },
+  { scene: '⚡ 危机', text: '突然遇到一个紧急危机，你的第一反应是？',
+    opts: [['立刻行动，先解决再说', 'cheetah'], ['冷静分析，找出最优方案', 'owl'], ['通知团队，一起应对', 'elephant'], ['灵机一动，想出意想不到的解法', 'fox'], ['有点慌，但会慢慢稳下来', 'turtle']] },
+  { scene: '🎯 目标', text: '你设定目标的方式是？',
+    opts: [['大目标，敢想敢干', 'eagle'], ['详细计划，步步为营', 'owl'], ['跟着感觉走，目标会自然出现', 'butterfly'], ['短期目标，快速见效', 'cheetah'], ['没什么特别的目标，活在当下', 'dolphin']] },
+  { scene: '😤 冲突', text: '和别人发生冲突时，你更倾向于？',
+    opts: [['直接对抗，把话说清楚', 'lion'], ['冷静分析谁对谁错', 'wolf'], ['尽量化解，维持和平', 'elephant'], ['用智慧绕过冲突', 'fox'], ['沉默，等风波过去', 'turtle']] },
+  { scene: '🌙 夜晚', text: '深夜睡不着，你会？',
+    opts: [['刷手机或看剧', 'dolphin'], ['思考人生和未来', 'owl'], ['起来做点事，反正睡不着', 'wolf'], ['听音乐或冥想', 'butterfly'], ['翻来覆去，越想越睡不着', 'hedgehog']] },
+  { scene: '🤝 合作', text: '在团队项目中，你最自然的角色是？',
+    opts: [['领导者，负责方向和决策', 'lion'], ['执行者，把事情做到最好', 'cheetah'], ['协调者，让大家合作顺畅', 'elephant'], ['创意者，提供新想法', 'fox'], ['支持者，默默做好后勤', 'turtle']] },
+  { scene: '🌿 自然', text: '如果你是一种自然环境，你更像？',
+    opts: [['广阔的草原，自由开放', 'lion'], ['深邃的森林，神秘幽静', 'wolf'], ['浩瀚的海洋，深不可测', 'dolphin'], ['高耸的山峰，孤独而壮阔', 'eagle'], ['温暖的花园，生机勃勃', 'butterfly']] },
+  { scene: '💡 创意', text: '你的创意通常来自？',
+    opts: [['观察生活，随时有灵感', 'butterfly'], ['深度思考，逻辑推导', 'owl'], ['和别人碰撞，激发火花', 'dolphin'], ['压力下的爆发', 'cheetah'], ['我不太有创意，更擅长执行', 'turtle']] },
+  { scene: '❤️ 情感', text: '在感情中，你更像？',
+    opts: [['主动追求，热情直接', 'lion'], ['若即若离，保持神秘', 'wolf'], ['温柔体贴，照顾对方', 'elephant'], ['有趣好玩，让对方开心', 'dolphin'], ['慢热，但一旦投入就很深', 'hedgehog']] },
+  { scene: '🏆 成功', text: '你对"成功"的定义是？',
+    opts: [['达成重要目标，被人认可', 'eagle'], ['做自己热爱的事', 'butterfly'], ['家人朋友幸福', 'elephant'], ['自由，不被束缚', 'wolf'], ['每天都有进步', 'cheetah']] },
+  { scene: '😴 放松', text: '最能让你放松的方式是？',
+    opts: [['运动或户外活动', 'cheetah'], ['独处，安静地思考', 'owl'], ['和好友聊天', 'dolphin'], ['看书或看电影', 'hedgehog'], ['什么都不做，发呆', 'turtle']] },
+  { scene: '🔮 直觉', text: '你相信直觉吗？',
+    opts: [['非常相信，直觉很准', 'fox'], ['相信，但也会理性验证', 'wolf'], ['一般，更信数据和逻辑', 'owl'], ['不太信，容易被直觉坑', 'turtle'], ['直觉是什么，我只有冲动', 'cheetah']] },
+  { scene: '🌍 世界观', text: '你觉得这个世界本质上是？',
+    opts: [['弱肉强食，要靠自己', 'lion'], ['充满可能性，值得探索', 'eagle'], ['复杂而美好，需要用心感受', 'butterfly'], ['混乱的，但可以找到规律', 'owl'], ['就这样，活着就好', 'turtle']] },
+  { scene: '🎭 最后', text: '如果用一句话描述你自己，你会选？',
+    opts: [['我是来改变世界的', 'lion'], ['我是来理解世界的', 'owl'], ['我是来享受世界的', 'dolphin'], ['我是来守护世界的', 'elephant'], ['我是来自由穿梭于世界的', 'fox']] }
+]
+
+const ANIMALS = {
+  lion:     { name: '狮子', emoji: '🦁', slogan: '我不是最快的，但我是最强的。', desc: '你有天生的领袖气质，自信、果断、有感召力。你不喜欢被人领导，更喜欢站在前面带领大家。你的存在感很强，进入一个房间，大家都会注意到你。', traits: ['领袖气质', '自信果断', '存在感强', '保护欲强'], compat: ['🐘 大象（忠诚伙伴）', '🦅 鹰（共同征服）', '🦊 狐狸（天敌/对手）'] },
+  wolf:     { name: '狼', emoji: '🐺', slogan: '独行侠，但我知道何时需要狼群。', desc: '你独立、有原则、忠于自己的价值观。你不需要太多人的认可，但对认定的人会全力守护。你有强烈的直觉和洞察力，能看穿表象。', traits: ['独立自主', '忠诚深情', '洞察力强', '有原则'], compat: ['🦁 狮子（强强联合）', '🦉 猫头鹰（智慧搭档）', '🦋 蝴蝶（互补）'] },
+  fox:      { name: '狐狸', emoji: '🦊', slogan: '聪明不是炫耀的，是用来解决问题的。', desc: '你机智、灵活、善于观察。你总能在复杂局面中找到最优路径，用最小的代价达到目的。你有点神秘，让人捉摸不透，但这正是你的魅力所在。', traits: ['机智灵活', '善于观察', '神秘感', '适应力强'], compat: ['🐺 狼（默契搭档）', '🐬 海豚（欢乐组合）', '🦁 狮子（相爱相杀）'] },
+  dolphin:  { name: '海豚', emoji: '🐬', slogan: '生活就是要开心，顺便聪明一下。', desc: '你聪明、活泼、充满感染力。你享受社交，能让任何场合都变得有趣。你有很强的情商，能感知他人情绪，是天生的沟通高手。', traits: ['高情商', '活泼开朗', '感染力强', '聪明好玩'], compat: ['🦋 蝴蝶（灵魂共鸣）', '🦁 狮子（互相欣赏）', '🦔 刺猬（互补）'] },
+  eagle:    { name: '鹰', emoji: '🦅', slogan: '站得高，看得远，飞得快。', desc: '你有远见、有野心、目标感极强。你喜欢从高处俯瞰全局，不喜欢被细节束缚。你独立、自由，对平庸有天然的不耐烦，总在追求更高的境界。', traits: ['远见卓识', '独立自由', '目标感强', '不甘平庸'], compat: ['🦁 狮子（王者组合）', '🐺 狼（战略搭档）', '🐢 乌龟（互补）'] },
+  elephant: { name: '大象', emoji: '🐘', slogan: '我记得每一个人，也守护每一个人。', desc: '你温和、可靠、有强烈的责任感。你重视关系，记得每个人的细节，是朋友圈里最值得信赖的存在。你的稳定性和包容心让人感到安全。', traits: ['温和可靠', '记忆力强', '责任感强', '包容心大'], compat: ['🦁 狮子（互补搭档）', '🐬 海豚（温暖组合）', '🦅 鹰（相互学习）'] },
+  butterfly:{ name: '蝴蝶', emoji: '🦋', slogan: '我不是在变化，我是在成长。', desc: '你有艺术气质，对美和感受有独特的敏感度。你喜欢自由，不喜欢被定义。你的人生是一场不断蜕变的旅程，每个阶段都有不同的精彩。', traits: ['艺术气质', '自由灵魂', '感受力强', '不断成长'], compat: ['🐬 海豚（灵魂共鸣）', '🦉 猫头鹰（互补）', '🐺 狼（神秘吸引）'] },
+  turtle:   { name: '乌龟', emoji: '🐢', slogan: '慢，但我一定会到达终点。', desc: '你稳重、有耐心、不急不躁。你不在乎别人的节奏，只按自己的步调前进。你有很强的抗压能力，在别人崩溃的时候你还能保持冷静。', traits: ['稳重耐心', '抗压能力强', '不急不躁', '坚持到底'], compat: ['🐘 大象（稳稳的幸福）', '🦉 猫头鹰（智慧组合）', '🦅 鹰（互补）'] },
+  cheetah:  { name: '猎豹', emoji: '🐆', slogan: '我不是最聪明的，但我是最快的。', desc: '你行动力超强，反应迅速，在压力下能爆发出惊人的能量。你不喜欢拖延，喜欢快速见效。你活在当下，享受速度和效率带来的快感。', traits: ['行动力超强', '反应迅速', '爆发力强', '活在当下'], compat: ['🦁 狮子（强强联合）', '🦊 狐狸（速度与智慧）', '🐢 乌龟（相爱相杀）'] },
+  owl:      { name: '猫头鹰', emoji: '🦉', slogan: '我不说话，但我什么都知道。', desc: '你智慧、深沉、善于思考。你喜欢在黑暗中观察，在别人看不到的地方发现真相。你不需要太多人理解你，因为你自己就是一个完整的世界。', traits: ['智慧深沉', '洞察力强', '独立思考', '神秘内敛'], compat: ['🐺 狼（智慧联盟）', '🦋 蝴蝶（互补）', '🐆 猎豹（互补）'] },
+  hedgehog: { name: '刺猬', emoji: '🦔', slogan: '我有刺，但我的内心很柔软。', desc: '你外表独立甚至有点冷漠，但内心其实非常细腻敏感。你需要时间才能打开心扉，但一旦信任一个人，就会全力以赴。你的刺是保护，不是攻击。', traits: ['外冷内热', '细腻敏感', '慢热深情', '独立自我'], compat: ['🐬 海豚（温暖融化）', '🐘 大象（安全感）', '🦊 狐狸（神秘吸引）'] }
+}
+
+let scores = {}
+Object.keys(ANIMALS).forEach(k => scores[k] = 0)
+let curIdx = 0
+let answers = []
+
+function startTest() {
+  Object.keys(ANIMALS).forEach(k => scores[k] = 0)
+  curIdx = 0
+  answers = new Array(QUESTIONS.length).fill(-1)
+  showScreen('screen-test')
+  renderQ()
+}
+
+function renderQ() {
+  const q = QUESTIONS[curIdx]
+  document.getElementById('q-text').textContent = q.text
+  document.getElementById('q-scene').textContent = q.scene
+  document.getElementById('q-cur').textContent = curIdx + 1
+  document.getElementById('q-total').textContent = QUESTIONS.length
+  document.getElementById('progress-fill').style.width = (curIdx / QUESTIONS.length * 100) + '%'
+  document.getElementById('options-wrap').innerHTML = q.opts.map((opt, i) => `
+    <div class="opt ${answers[curIdx] === i ? 'selected' : ''}" onclick="selectOpt(${i})">
+      <div class="opt-text">${opt[0]}</div>
+    </div>
+  `).join('')
+}
+
+function selectOpt(idx) {
+  const q = QUESTIONS[curIdx]
+  const prev = answers[curIdx]
+  if (prev !== -1) scores[q.opts[prev][1]]--
+  answers[curIdx] = idx
+  scores[q.opts[idx][1]]++
+  document.querySelectorAll('.opt').forEach((el, i) => el.classList.toggle('selected', i === idx))
+  setTimeout(() => {
+    if (curIdx < QUESTIONS.length - 1) { curIdx++; renderQ() }
+    else showResult()
+  }, 220)
+}
+
+function showResult() {
+  const top = Object.keys(scores).reduce((a, b) => scores[a] >= scores[b] ? a : b)
+  const t = ANIMALS[top]
+  document.getElementById('r-emoji').textContent = t.emoji
+  document.getElementById('r-name').textContent = t.name
+  document.getElementById('r-slogan').textContent = '"' + t.slogan + '"'
+  document.getElementById('r-desc').textContent = t.desc
+  document.getElementById('r-traits').innerHTML = t.traits.map(s => `<span class="trait">${s}</span>`).join('')
+  document.getElementById('r-compat').innerHTML = t.compat.map(s => `<div class="compat-item">${s}</div>`).join('')
+  showScreen('screen-result')
+}
+
+function retry() { showScreen('screen-home') }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo(0, 0)
+}
+</script>
+</body>
+</html>

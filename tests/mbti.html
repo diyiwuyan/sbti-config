@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MBTI 人格测试</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #0d0d0d; color: #eee; font-family: -apple-system, 'PingFang SC', sans-serif; min-height: 100vh; }
+  .screen { display: none; padding: 0 24px 60px; }
+  .screen.active { display: block; }
+
+  .hero { padding: 60px 0 28px; text-align: center; }
+  .hero-emoji { font-size: 72px; display: block; margin-bottom: 20px; }
+  .hero-title { font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+  .hero-sub { font-size: 14px; color: #666; line-height: 1.7; }
+
+  .intro-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; margin: 20px 0; }
+  .intro-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .intro-row:last-child { margin-bottom: 0; }
+  .intro-dot { width: 8px; height: 8px; border-radius: 50%; background: #ce93d8; margin-top: 6px; flex-shrink: 0; }
+  .intro-text { font-size: 14px; color: #aaa; line-height: 1.6; }
+
+  .btn-start { width: 100%; padding: 18px; background: linear-gradient(135deg, #ce93d8, #9c27b0); color: #fff; font-size: 18px; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; }
+
+  .progress-bar-wrap { height: 4px; background: #1a1a1a; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #ce93d8, #9c27b0); transition: width 0.4s; }
+  .q-header { padding: 20px 24px 0; display: flex; justify-content: space-between; align-items: center; }
+  .q-num { font-size: 13px; color: #555; }
+  .q-num span { color: #ce93d8; font-weight: 700; }
+  .q-dim { font-size: 12px; color: #444; background: #1a1a1a; padding: 4px 10px; border-radius: 20px; }
+  .q-body { padding: 24px 24px 20px; }
+  .q-text { font-size: 17px; color: #eee; line-height: 1.7; font-weight: 600; }
+
+  .options { display: flex; flex-direction: column; gap: 12px; padding: 0 24px 40px; }
+  .opt { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 18px 20px; cursor: pointer; transition: all 0.15s; }
+  .opt:active { background: #222; }
+  .opt.selected { border-color: #ce93d8; background: #ce93d822; }
+  .opt-label { font-size: 12px; color: #555; margin-bottom: 6px; font-weight: 700; letter-spacing: 1px; }
+  .opt.selected .opt-label { color: #ce93d8; }
+  .opt-text { font-size: 15px; color: #ccc; line-height: 1.5; }
+
+  /* 结果 */
+  .result-hero { text-align: center; padding: 48px 24px 24px; }
+  .result-code { font-size: 52px; font-weight: 900; color: #fff; letter-spacing: 4px; margin-bottom: 8px; }
+  .result-name { font-size: 22px; color: #ce93d8; font-weight: 700; margin-bottom: 6px; }
+  .result-emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+  .result-slogan { font-size: 15px; color: #888; font-style: italic; line-height: 1.6; }
+
+  .result-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 20px; margin: 0 24px 16px; }
+  .rc-title { font-size: 13px; font-weight: 700; color: #555; letter-spacing: 2px; margin-bottom: 14px; }
+  .rc-text { font-size: 14px; color: #aaa; line-height: 1.8; }
+
+  .dim-bars { display: flex; flex-direction: column; gap: 14px; }
+  .dim-row { display: flex; flex-direction: column; gap: 6px; }
+  .dim-labels { display: flex; justify-content: space-between; font-size: 12px; }
+  .dim-l { color: #ce93d8; font-weight: 700; }
+  .dim-r { color: #555; }
+  .dim-track { height: 8px; background: #252525; border-radius: 4px; overflow: hidden; }
+  .dim-fill { height: 100%; background: linear-gradient(90deg, #ce93d8, #9c27b0); border-radius: 4px; transition: width 0.8s ease; }
+
+  .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .type-item { background: #252525; border-radius: 10px; padding: 10px 12px; }
+  .type-item.highlight { background: #ce93d822; border: 1px solid #ce93d844; }
+  .type-code { font-size: 13px; font-weight: 700; color: #ce93d8; margin-bottom: 2px; }
+  .type-name { font-size: 12px; color: #666; }
+
+  .btn-retry { width: calc(100% - 48px); margin: 8px 24px 0; padding: 16px; background: #1a1a1a; border: 1px solid #333; color: #888; font-size: 16px; font-weight: 700; border-radius: 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <span class="hero-emoji">🧩</span>
+    <div class="hero-title">MBTI 人格测试</div>
+    <div class="hero-sub">Myers-Briggs 人格类型指标<br>16种人格，你是哪一种？</div>
+  </div>
+  <div class="intro-card">
+    <div class="intro-row"><div class="intro-dot"></div><div class="intro-text">共 <strong style="color:#eee">32 道题</strong>，约 4 分钟完成</div></div>
+    <div class="intro-row"><div class="intro-dot"></div><div class="intro-text">测量 <strong style="color:#eee">4个维度</strong>：E/I · S/N · T/F · J/P</div></div>
+    <div class="intro-row"><div class="intro-dot"></div><div class="intro-text">得出你的 <strong style="color:#eee">4字母人格代码</strong>，如 INFP、ENTJ</div></div>
+    <div class="intro-row"><div class="intro-dot"></div><div class="intro-text">凭直觉选择，没有对错之分</div></div>
+  </div>
+  <button class="btn-start" onclick="startTest()">开始测试</button>
+</div>
+
+<div class="screen" id="screen-test">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="q-header">
+    <div class="q-num">第 <span id="q-cur">1</span> / <span id="q-total">32</span> 题</div>
+    <div class="q-dim" id="q-dim"></div>
+  </div>
+  <div class="q-body">
+    <div class="q-text" id="q-text"></div>
+  </div>
+  <div class="options" id="options-wrap"></div>
+</div>
+
+<div class="screen" id="screen-result">
+  <div class="result-hero">
+    <span class="result-emoji" id="r-emoji"></span>
+    <div class="result-code" id="r-code"></div>
+    <div class="result-name" id="r-name"></div>
+    <div class="result-slogan" id="r-slogan"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">📊 四维倾向</div>
+    <div class="dim-bars" id="dim-bars"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">🧬 人格特质</div>
+    <div class="rc-text" id="r-desc"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">🌟 同类型名人</div>
+    <div class="rc-text" id="r-famous"></div>
+  </div>
+  <button class="btn-retry" onclick="retry()">🔄 重新测试</button>
+</div>
+
+<script>
+const QUESTIONS = [
+  // E/I 外向/内向
+  { text: '在聚会上，你更倾向于主动找人聊天，还是等别人来找你？', dim: 'EI', opts: ['主动找人聊，越热闹越好', '等别人来找我，或者找熟人待着'], scores: [2, 0] },
+  { text: '一天工作结束后，你更想？', dim: 'EI', opts: ['和朋友出去聚聚，充充电', '一个人待着，安静恢复精力'], scores: [2, 0] },
+  { text: '你更喜欢哪种工作方式？', dim: 'EI', opts: ['团队协作，边讨论边推进', '独立完成，自己想清楚再说'], scores: [2, 0] },
+  { text: '你在陌生人面前通常？', dim: 'EI', opts: ['很快打开话匣子，不尴尬', '比较安静，需要时间热身'], scores: [2, 0] },
+  { text: '你更享受哪种周末？', dim: 'EI', opts: ['出门社交、参加活动', '宅在家，做自己的事'], scores: [2, 0] },
+  { text: '你思考问题时更倾向于？', dim: 'EI', opts: ['边说边想，说出来才清晰', '先在脑子里想清楚再开口'], scores: [2, 0] },
+  { text: '你的朋友圈通常是？', dim: 'EI', opts: ['很广，认识很多人', '不大，但关系很深'], scores: [2, 0] },
+  { text: '你在会议/课堂上更倾向于？', dim: 'EI', opts: ['积极发言，表达想法', '多听少说，私下再交流'], scores: [2, 0] },
+  // S/N 感觉/直觉
+  { text: '你更信任哪种信息？', dim: 'SN', opts: ['亲眼看到、亲身经历的事实', '直觉和灵感，感觉对就是对'], scores: [2, 0] },
+  { text: '你更喜欢哪类工作？', dim: 'SN', opts: ['有明确步骤和规范的任务', '开放性的、需要创意的任务'], scores: [2, 0] },
+  { text: '你描述事情时更倾向于？', dim: 'SN', opts: ['具体、详细、有数据', '抽象、比喻、讲大方向'], scores: [2, 0] },
+  { text: '你更关注？', dim: 'SN', opts: ['现在发生的事，眼前的现实', '未来的可能性，事情的潜力'], scores: [2, 0] },
+  { text: '你学新东西时更喜欢？', dim: 'SN', opts: ['从基础开始，一步步来', '先看整体框架，再填细节'], scores: [2, 0] },
+  { text: '你更享受哪种阅读？', dim: 'SN', opts: ['实用类、操作指南、真实故事', '科幻、哲学、脑洞大开的内容'], scores: [2, 0] },
+  { text: '你做决定时更依赖？', dim: 'SN', opts: ['过去的经验和已有的数据', '直觉和对未来的预判'], scores: [2, 0] },
+  { text: '你更喜欢哪种对话？', dim: 'SN', opts: ['聊具体的事、实际的问题', '聊想法、可能性、假设'], scores: [2, 0] },
+  // T/F 思考/情感
+  { text: '朋友向你倾诉烦恼，你第一反应是？', dim: 'TF', opts: ['帮他分析问题，给出解决方案', '先共情，让他感觉被理解'], scores: [2, 0] },
+  { text: '做决定时你更看重？', dim: 'TF', opts: ['逻辑和客观分析', '对人的影响和感受'], scores: [2, 0] },
+  { text: '你更容易被哪种人打动？', dim: 'TF', opts: ['逻辑清晰、有理有据的人', '真诚热情、有感染力的人'], scores: [2, 0] },
+  { text: '批评别人时你更倾向于？', dim: 'TF', opts: ['直接说问题，对事不对人', '先肯定再委婉提出，照顾感受'], scores: [2, 0] },
+  { text: '你认为公平更重要还是和谐更重要？', dim: 'TF', opts: ['公平，规则面前人人平等', '和谐，维护关系比原则更重要'], scores: [2, 0] },
+  { text: '你更擅长？', dim: 'TF', opts: ['分析利弊，做出理性判断', '感知氛围，照顾他人情绪'], scores: [2, 0] },
+  { text: '你更认同哪句话？', dim: 'TF', opts: ['真相比感受更重要', '感受比真相更重要'], scores: [2, 0] },
+  { text: '面对冲突你更倾向于？', dim: 'TF', opts: ['直接面对，把问题说清楚', '尽量回避，维持表面和平'], scores: [2, 0] },
+  // J/P 判断/感知
+  { text: '你更喜欢哪种生活方式？', dim: 'JP', opts: ['有计划、有规律，提前安排好', '随性、灵活，走一步看一步'], scores: [2, 0] },
+  { text: '面对截止日期你通常？', dim: 'JP', opts: ['提前完成，不喜欢拖到最后', '最后关头才爆发，DDL战士'], scores: [2, 0] },
+  { text: '你的桌面/房间通常是？', dim: 'JP', opts: ['整洁有序，东西各归其位', '有点乱，但我知道东西在哪'], scores: [2, 0] },
+  { text: '旅行时你更喜欢？', dim: 'JP', opts: ['提前规划好行程和住宿', '随机应变，说走就走'], scores: [2, 0] },
+  { text: '做完一件事你更倾向于？', dim: 'JP', opts: ['立刻收尾，进入下一件', '先放着，可能还有变化'], scores: [2, 0] },
+  { text: '你更喜欢哪种工作环境？', dim: 'JP', opts: ['明确的目标和时间表', '弹性的、可以随时调整的'], scores: [2, 0] },
+  { text: '你对"计划有变"的反应通常是？', dim: 'JP', opts: ['有点烦，打乱了节奏', '无所谓，甚至有点兴奋'], scores: [2, 0] },
+  { text: '你更认同哪种说法？', dim: 'JP', opts: ['做事要有始有终，善始善终', '保持开放，不要过早下结论'], scores: [2, 0] }
+]
+
+const TYPES = {
+  INTJ: { name: '建筑师', emoji: '🏛️', slogan: '我的计划，从不出错。', desc: '独立、战略性强、意志坚定。你是天生的规划者，能看到别人看不到的长远格局。对低效和无能有天然的不耐烦，但对自己认定的目标会全力以赴。', famous: '埃隆·马斯克、尼采、克里斯托弗·诺兰' },
+  INTP: { name: '逻辑学家', emoji: '🔭', slogan: '这个问题，我再想想。', desc: '好奇、分析性强、思维灵活。你是天生的理论家，享受拆解复杂问题的过程。对知识有强烈渴望，但有时会陷入过度分析的漩涡。', famous: '爱因斯坦、比尔·盖茨、达芬奇' },
+  ENTJ: { name: '指挥官', emoji: '⚔️', slogan: '跟我走，我知道方向。', desc: '果断、有魄力、天生领袖。你看到混乱就想整顿，看到低效就想优化。目标感极强，执行力惊人，但有时会忽视他人感受。', famous: '史蒂夫·乔布斯、拿破仑、戈登·拉姆齐' },
+  ENTP: { name: '辩论家', emoji: '💡', slogan: '来，我们辩一辩。', desc: '机智、创新、喜欢挑战。你享受智识上的交锋，喜欢打破常规和质疑权威。点子多但执行力有时跟不上，最怕无聊。', famous: '马克·吐温、托马斯·爱迪生、小罗伯特·唐尼' },
+  INFJ: { name: '提倡者', emoji: '🌿', slogan: '我只做真正有意义的事。', desc: '有远见、有原则、富有同理心。你是最稀有的人格之一，内心有强烈的使命感，对人性有深刻洞察，但容易因理想与现实的落差而疲惫。', famous: '马丁·路德·金、甘地、泰勒·斯威夫特' },
+  INFP: { name: '调停者', emoji: '🌸', slogan: '世界应该更美好一点。', desc: '理想主义、富有创造力、忠于自我。你有丰富的内心世界，对美和意义有独特感知。外表平静，内心戏极多，最怕被迫违背自己的价值观。', famous: '托尔金、梵高、约翰·列侬' },
+  ENFJ: { name: '主人公', emoji: '🌟', slogan: '我来帮你成为更好的自己。', desc: '有感召力、善于激励他人、天生的领导者。你能感知到别人的潜力并帮助他们成长，但有时会忽视自己的需求。', famous: '奥巴马、奥普拉·温弗瑞、金·卡戴珊' },
+  ENFP: { name: '竞选者', emoji: '🎉', slogan: '生活充满可能性！', desc: '热情、有创意、充满活力。你对生活充满好奇，能在任何地方找到乐趣和意义。社交能力强，但有时难以专注和坚持。', famous: '罗宾·威廉姆斯、威尔·史密斯、安妮·弗兰克' },
+  ISTJ: { name: '物流师', emoji: '📦', slogan: '规则存在是有原因的。', desc: '可靠、负责、注重细节。你是最值得信赖的人格之一，做事认真踏实，重视传统和规则。不喜欢变化，但在稳定环境中表现出色。', famous: '沃伦·巴菲特、安吉拉·默克尔、乔治·华盛顿' },
+  ISFJ: { name: '守卫者', emoji: '🛡️', slogan: '我会照顾好每一个人。', desc: '温暖、细心、默默付出。你是天生的照顾者，记得每个人的喜好和需求，但有时会忘记照顾自己。', famous: '碧昂斯、凯特·米德尔顿、罗杰·费德勒' },
+  ESTJ: { name: '总经理', emoji: '📋', slogan: '按计划执行，不接受借口。', desc: '务实、果断、重视秩序。你是天生的管理者，擅长组织和执行，对效率和规则有强烈执念。', famous: '弗兰克·辛纳特拉、艾玛·沃特森、约翰·D·洛克菲勒' },
+  ESFJ: { name: '执政官', emoji: '🤗', slogan: '大家开心，我才开心。', desc: '热情、关心他人、重视和谐。你是社交场合的润滑剂，能感知到每个人的情绪并照顾到位，但有时过于在意他人评价。', famous: '泰勒·斯威夫特、比尔·克林顿、詹妮弗·洛佩兹' },
+  ISTP: { name: '鉴赏家', emoji: '🔧', slogan: '让我来拆开看看。', desc: '冷静、务实、动手能力强。你是天生的问题解决者，喜欢用双手探索世界，对机械和系统有天然的理解力。', famous: '克林特·伊斯特伍德、迈克尔·乔丹、弗吉尼亚·伍尔夫' },
+  ISFP: { name: '探险家', emoji: '🎨', slogan: '活在当下，感受美好。', desc: '温和、有艺术气质、享受当下。你有独特的审美和感知力，不喜欢被规则束缚，活在感官和情感的世界里。', famous: '迈克尔·杰克逊、布兰妮·斯皮尔斯、大卫·鲍伊' },
+  ESTP: { name: '企业家', emoji: '⚡', slogan: '先干了再说！', desc: '大胆、直接、行动力超强。你活在当下，喜欢冒险和刺激，能在混乱中保持冷静。不喜欢理论，只相信实际结果。', famous: '唐纳德·特朗普、麦当娜、欧内斯特·海明威' },
+  ESFP: { name: '表演者', emoji: '🎭', slogan: '人生就是一场派对！', desc: '活泼、热情、天生的表演者。你能让任何场合都变得有趣，享受成为关注焦点。活在当下，不喜欢计划和规则。', famous: '玛丽莲·梦露、艾尔顿·约翰、卡迪B' }
+}
+
+const DIM_NAMES = { EI: ['外向 E', '内向 I'], SN: ['感觉 S', '直觉 N'], TF: ['思考 T', '情感 F'], JP: ['判断 J', '感知 P'] }
+const DIMS = ['EI', 'SN', 'TF', 'JP']
+let scores = { EI: 0, SN: 0, TF: 0, JP: 0 }
+let counts = { EI: 0, SN: 0, TF: 0, JP: 0 }
+let curIdx = 0
+let answers = []
+
+function startTest() {
+  scores = { EI: 0, SN: 0, TF: 0, JP: 0 }
+  counts = { EI: 0, SN: 0, TF: 0, JP: 0 }
+  curIdx = 0
+  answers = new Array(QUESTIONS.length).fill(-1)
+  showScreen('screen-test')
+  renderQ()
+}
+
+function renderQ() {
+  const q = QUESTIONS[curIdx]
+  document.getElementById('q-text').textContent = q.text
+  document.getElementById('q-cur').textContent = curIdx + 1
+  document.getElementById('q-total').textContent = QUESTIONS.length
+  document.getElementById('q-dim').textContent = DIM_NAMES[q.dim][0] + ' vs ' + DIM_NAMES[q.dim][1]
+  document.getElementById('progress-fill').style.width = (curIdx / QUESTIONS.length * 100) + '%'
+
+  const wrap = document.getElementById('options-wrap')
+  wrap.innerHTML = q.opts.map((opt, i) => `
+    <div class="opt ${answers[curIdx] === i ? 'selected' : ''}" onclick="selectOpt(${i})">
+      <div class="opt-label">${String.fromCharCode(65 + i)}</div>
+      <div class="opt-text">${opt}</div>
+    </div>
+  `).join('')
+}
+
+function selectOpt(idx) {
+  const q = QUESTIONS[curIdx]
+  const prev = answers[curIdx]
+  if (prev !== -1) { scores[q.dim] -= q.scores[prev]; counts[q.dim]-- }
+  answers[curIdx] = idx
+  scores[q.dim] += q.scores[idx]
+  counts[q.dim]++
+
+  document.querySelectorAll('.opt').forEach((el, i) => el.classList.toggle('selected', i === idx))
+  setTimeout(() => {
+    if (curIdx < QUESTIONS.length - 1) { curIdx++; renderQ() }
+    else showResult()
+  }, 200)
+}
+
+function showResult() {
+  // 每个维度：score > count 取第一个字母，否则取第二个
+  const E = scores.EI > counts.EI ? 'E' : 'I'
+  const S = scores.SN > counts.SN ? 'S' : 'N'
+  const T = scores.TF > counts.TF ? 'T' : 'F'
+  const J = scores.JP > counts.JP ? 'J' : 'P'
+  const code = E + S + T + J
+  const t = TYPES[code] || TYPES['INFP']
+
+  document.getElementById('r-emoji').textContent = t.emoji
+  document.getElementById('r-code').textContent = code
+  document.getElementById('r-name').textContent = t.name
+  document.getElementById('r-slogan').textContent = '"' + t.slogan + '"'
+  document.getElementById('r-desc').textContent = t.desc
+  document.getElementById('r-famous').textContent = '✨ ' + t.famous
+
+  // 四维条形图
+  const barsEl = document.getElementById('dim-bars')
+  const dimData = [
+    { dim: 'EI', left: 'E 外向', right: 'I 内向', pct: Math.round(scores.EI / (counts.EI * 2) * 100) },
+    { dim: 'SN', left: 'S 感觉', right: 'N 直觉', pct: Math.round(scores.SN / (counts.SN * 2) * 100) },
+    { dim: 'TF', left: 'T 思考', right: 'F 情感', pct: Math.round(scores.TF / (counts.TF * 2) * 100) },
+    { dim: 'JP', left: 'J 判断', right: 'P 感知', pct: Math.round(scores.JP / (counts.JP * 2) * 100) }
+  ]
+  barsEl.innerHTML = dimData.map(d => `
+    <div class="dim-row">
+      <div class="dim-labels">
+        <span class="dim-l">${d.left} ${d.pct}%</span>
+        <span class="dim-r">${d.right} ${100 - d.pct}%</span>
+      </div>
+      <div class="dim-track"><div class="dim-fill" style="width:0%" data-pct="${d.pct}"></div></div>
+    </div>
+  `).join('')
+
+  showScreen('screen-result')
+  setTimeout(() => {
+    document.querySelectorAll('.dim-fill').forEach(el => { el.style.width = el.dataset.pct + '%' })
+  }, 100)
+}
+
+function retry() { showScreen('screen-home') }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo(0, 0)
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>你是哪位漫威英雄？</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #0a0a0f; color: #eee; font-family: -apple-system, 'PingFang SC', sans-serif; min-height: 100vh; }
+  .screen { display: none; padding: 0 0 60px; }
+  .screen.active { display: block; }
+
+  /* Home */
+  .home-banner { background: linear-gradient(160deg, #1a0a2e 0%, #0d0d1a 60%); padding: 56px 24px 32px; text-align: center; position: relative; overflow: hidden; }
+  .home-banner::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, #e2353533 0%, transparent 70%); }
+  .banner-emoji { font-size: 64px; display: block; margin-bottom: 16px; position: relative; }
+  .banner-title { font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 8px; position: relative; }
+  .banner-title span { color: #e23535; }
+  .banner-sub { font-size: 14px; color: #666; line-height: 1.7; position: relative; }
+  .hero-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 20px 24px; }
+  .hg-item { background: #12121f; border: 1px solid #1e1e35; border-radius: 14px; padding: 14px 8px; text-align: center; }
+  .hg-emoji { font-size: 28px; display: block; margin-bottom: 6px; }
+  .hg-name { font-size: 11px; color: #666; }
+  .btn-start { width: calc(100% - 48px); margin: 4px 24px 0; padding: 18px; background: linear-gradient(135deg, #e23535, #8b0000); color: #fff; font-size: 18px; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; }
+
+  /* Test */
+  .progress-bar-wrap { height: 4px; background: #12121f; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #e23535, #ff6b6b); transition: width 0.4s; }
+  .q-header { padding: 20px 24px 0; }
+  .q-num { font-size: 13px; color: #444; margin-bottom: 4px; }
+  .q-num span { color: #e23535; font-weight: 700; }
+  .q-scene { font-size: 12px; color: #333; background: #12121f; border-radius: 20px; padding: 4px 12px; display: inline-block; margin-bottom: 16px; }
+  .q-text { font-size: 17px; color: #eee; line-height: 1.7; font-weight: 600; padding: 0 24px 20px; }
+  .options { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 40px; }
+  .opt { background: #12121f; border: 1px solid #1e1e35; border-radius: 14px; padding: 16px 20px; cursor: pointer; transition: all 0.15s; }
+  .opt:active { background: #1a1a2e; }
+  .opt.selected { border-color: #e23535; background: #e2353522; }
+  .opt-text { font-size: 15px; color: #bbb; line-height: 1.5; }
+
+  /* Result */
+  .result-banner { text-align: center; padding: 48px 24px 28px; background: linear-gradient(160deg, #1a0a2e 0%, #0a0a0f 70%); }
+  .result-big { font-size: 88px; display: block; margin-bottom: 12px; animation: heroIn 0.5s ease; }
+  @keyframes heroIn { 0%{transform:scale(0.5) rotate(-10deg);opacity:0} 100%{transform:scale(1) rotate(0);opacity:1} }
+  .result-label { font-size: 12px; color: #e23535; font-weight: 700; letter-spacing: 3px; margin-bottom: 8px; }
+  .result-name { font-size: 34px; font-weight: 900; color: #fff; margin-bottom: 6px; }
+  .result-en { font-size: 14px; color: #444; margin-bottom: 12px; }
+  .result-slogan { font-size: 14px; color: #888; font-style: italic; line-height: 1.6; }
+
+  .result-card { background: #12121f; border: 1px solid #1e1e35; border-radius: 16px; padding: 20px; margin: 0 24px 14px; }
+  .rc-title { font-size: 12px; font-weight: 700; color: #444; letter-spacing: 2px; margin-bottom: 14px; }
+  .rc-text { font-size: 14px; color: #999; line-height: 1.8; }
+  .power-list { display: flex; flex-direction: column; gap: 10px; }
+  .power-item { display: flex; align-items: center; gap: 10px; }
+  .power-label { font-size: 13px; color: #888; width: 60px; flex-shrink: 0; }
+  .power-bar-bg { flex: 1; height: 6px; background: #1e1e35; border-radius: 3px; overflow: hidden; }
+  .power-bar-fill { height: 100%; background: linear-gradient(90deg, #e23535, #ff6b6b); border-radius: 3px; transition: width 1s ease; }
+  .power-val { font-size: 12px; color: #e23535; width: 30px; text-align: right; }
+  .trait-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .trait { background: #e2353522; border: 1px solid #e2353544; border-radius: 20px; padding: 5px 14px; font-size: 13px; color: #e23535; }
+  .ally-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .ally { background: #1a1a2e; border-radius: 12px; padding: 10px 14px; font-size: 13px; color: #aaa; }
+  .btn-retry { width: calc(100% - 48px); margin: 8px 24px 0; padding: 16px; background: #12121f; border: 1px solid #1e1e35; color: #666; font-size: 16px; font-weight: 700; border-radius: 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-home">
+  <div class="home-banner">
+    <span class="banner-emoji">🦸</span>
+    <div class="banner-title">你是哪位<span>漫威</span>英雄？</div>
+    <div class="banner-sub">性格决定命运<br>你的灵魂属于哪位超级英雄</div>
+  </div>
+  <div class="hero-grid">
+    <div class="hg-item"><span class="hg-emoji">🕷️</span><div class="hg-name">蜘蛛侠</div></div>
+    <div class="hg-item"><span class="hg-emoji">🔨</span><div class="hg-name">雷神</div></div>
+    <div class="hg-item"><span class="hg-emoji">🛡️</span><div class="hg-name">美队</div></div>
+    <div class="hg-item"><span class="hg-emoji">🤖</span><div class="hg-name">钢铁侠</div></div>
+    <div class="hg-item"><span class="hg-emoji">💚</span><div class="hg-name">绿巨人</div></div>
+    <div class="hg-item"><span class="hg-emoji">🏹</span><div class="hg-name">黑寡妇</div></div>
+    <div class="hg-item"><span class="hg-emoji">🌀</span><div class="hg-name">奇异博士</div></div>
+    <div class="hg-item"><span class="hg-emoji">⚡</span><div class="hg-name">惊奇队长</div></div>
+  </div>
+  <button class="btn-start" onclick="startTest()">开始测试</button>
+</div>
+
+<div class="screen" id="screen-test">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="q-header">
+    <div class="q-num">第 <span id="q-cur">1</span> / <span id="q-total">15</span> 题</div>
+    <div class="q-scene" id="q-scene"></div>
+  </div>
+  <div class="q-text" id="q-text"></div>
+  <div class="options" id="options-wrap"></div>
+</div>
+
+<div class="screen" id="screen-result">
+  <div class="result-banner">
+    <span class="result-big" id="r-emoji"></span>
+    <div class="result-label">你的漫威英雄</div>
+    <div class="result-name" id="r-name"></div>
+    <div class="result-en" id="r-en"></div>
+    <div class="result-slogan" id="r-slogan"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">📖 英雄档案</div>
+    <div class="rc-text" id="r-desc"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">⚡ 能力值</div>
+    <div class="power-list" id="r-powers"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">✨ 你的特质</div>
+    <div class="trait-row" id="r-traits"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">🤝 最佳搭档 & 宿敌</div>
+    <div class="ally-row" id="r-ally"></div>
+  </div>
+  <button class="btn-retry" onclick="retry()">🔄 重新测试</button>
+</div>
+
+<script>
+const QUESTIONS = [
+  { scene: '⚡ 超能力', text: '如果你能拥有一种超能力，你会选？',
+    opts: [['超级智慧，能解决一切问题', 'ironman'], ['无敌的力量和耐久', 'hulk'], ['时间和空间的掌控', 'strange'], ['速度和敏捷，无处不在', 'spiderman'], ['强大的意志力和领导力', 'cap']] },
+  { scene: '🎯 动机', text: '你成为英雄的最大动力是？',
+    opts: [['保护我爱的人', 'spiderman'], ['证明自己的价值', 'ironman'], ['维护正义和秩序', 'cap'], ['寻找内心的平静', 'strange'], ['为了荣耀和战斗', 'thor']] },
+  { scene: '😤 愤怒', text: '当你极度愤怒时，你会？',
+    opts: [['爆发出惊人的力量', 'hulk'], ['用讽刺和智慧反击', 'ironman'], ['冷静克制，等待时机', 'cap'], ['用技巧和策略化解', 'widow'], ['直接正面对抗', 'thor']] },
+  { scene: '🤝 团队', text: '在复仇者联盟里，你最可能扮演的角色是？',
+    opts: [['战略指挥，制定计划', 'cap'], ['技术支持，提供装备', 'ironman'], ['冲锋陷阵，正面硬刚', 'thor'], ['情报收集，暗中行动', 'widow'], ['关键时刻的奇迹一击', 'spiderman']] },
+  { scene: '💔 弱点', text: '你最大的弱点是？',
+    opts: [['情绪失控，容易冲动', 'hulk'], ['自负，有时不听劝', 'ironman'], ['太过执着于原则', 'cap'], ['过去的创伤和秘密', 'widow'], ['对他人太过在意', 'spiderman']] },
+  { scene: '🌍 世界观', text: '你认为拯救世界最重要的是？',
+    opts: [['科技和创新', 'ironman'], ['团结和信念', 'cap'], ['智慧和远见', 'strange'], ['勇气和力量', 'thor'], ['牺牲和奉献', 'spiderman']] },
+  { scene: '🎭 日常', text: '不当英雄的时候，你更像？',
+    opts: [['工作狂，总有做不完的事', 'ironman'], ['普通人，享受平凡生活', 'spiderman'], ['学者，不断钻研和学习', 'strange'], ['领导者，组织和协调', 'cap'], ['独行侠，独来独往', 'widow']] },
+  { scene: '⚔️ 战斗风格', text: '你的战斗风格是？',
+    opts: [['正面硬刚，以力破巧', 'thor'], ['智取，用策略和技术', 'ironman'], ['灵活机动，出其不意', 'spiderman'], ['精准致命，一击必杀', 'widow'], ['防守反击，等待破绽', 'cap']] },
+  { scene: '🌟 价值观', text: '你最看重的品质是？',
+    opts: [['诚实和正直', 'cap'], ['智慧和创造力', 'ironman'], ['勇气和力量', 'thor'], ['忠诚和牺牲', 'spiderman'], ['神秘和深度', 'strange']] },
+  { scene: '😰 恐惧', text: '你最害怕的是？',
+    opts: [['失去控制，伤害他人', 'hulk'], ['失去重要的人', 'spiderman'], ['被人遗忘，毫无价值', 'ironman'], ['世界陷入混乱', 'cap'], ['无法理解的未知', 'strange']] },
+  { scene: '🏆 成就感', text: '什么时候你最有成就感？',
+    opts: [['解决了一个极难的技术问题', 'ironman'], ['保护了需要帮助的人', 'spiderman'], ['带领团队完成了不可能的任务', 'cap'], ['在混乱中找到了秩序', 'strange'], ['在战场上证明了自己', 'thor']] },
+  { scene: '💬 沟通', text: '你的沟通方式是？',
+    opts: [['直接、有时候有点毒舌', 'ironman'], ['真诚、鼓励人心', 'cap'], ['幽默、用玩笑化解尴尬', 'spiderman'], ['简洁、只说必要的话', 'widow'], ['深刻、总有独到见解', 'strange']] },
+  { scene: '🔮 未来', text: '你对未来的态度是？',
+    opts: [['我来创造未来', 'ironman'], ['我来守护未来', 'cap'], ['未来已经注定，我只是执行者', 'strange'], ['活在当下，未来的事以后再说', 'thor'], ['未来充满可能，我很期待', 'spiderman']] },
+  { scene: '🌙 独处', text: '独处时，你通常在做什么？',
+    opts: [['研究和发明', 'ironman'], ['训练和提升自己', 'cap'], ['冥想和思考', 'strange'], ['回忆过去，整理情绪', 'widow'], ['找朋友玩，不喜欢独处', 'spiderman']] },
+  { scene: '🎬 最后', text: '如果你的人生是一部漫威电影，结局是？',
+    opts: [['我用智慧和牺牲拯救了宇宙', 'ironman'], ['我守护了每一个普通人', 'spiderman'], ['我带领团队完成了不可能的任务', 'cap'], ['我找到了内心真正的平静', 'strange'], ['我在战场上书写了传奇', 'thor']] }
+]
+
+const HEROES = {
+  ironman:   { name: '钢铁侠', en: 'Iron Man', emoji: '🤖', slogan: '"我就是钢铁侠。"', desc: '你聪明、自信、有点自负，但内心深处有强烈的责任感。你相信科技可以解决一切问题，喜欢用智慧和创造力改变世界。你的幽默感是你的盔甲，但真正的盔甲是你对重要之人的爱。', powers: [{n:'智力',v:98},{n:'技术',v:99},{n:'领导',v:85},{n:'战斗',v:80},{n:'意志',v:90}], traits: ['天才发明家', '幽默毒舌', '责任感强', '自我驱动'], ally: ['🛡️ 美队（最佳对手）', '🕷️ 蜘蛛侠（传承者）', '🌀 奇异博士（宿命搭档）'] },
+  cap:       { name: '美国队长', en: 'Captain America', emoji: '🛡️', slogan: '"我可以一直这样做。"', desc: '你正直、坚定、有强烈的道德感。你相信有些原则比生命更重要，不会因为压力而妥协。你是天生的领导者，不是因为你最强，而是因为你最值得信任。', powers: [{n:'领导',v:99},{n:'意志',v:98},{n:'战斗',v:90},{n:'智力',v:80},{n:'魅力',v:95}], traits: ['正直无私', '天生领袖', '坚守原则', '鼓舞人心'], ally: ['🤖 钢铁侠（最佳对手）', '💚 绿巨人（力量搭档）', '🏹 黑寡妇（默契战友）'] },
+  spiderman: { name: '蜘蛛侠', en: 'Spider-Man', emoji: '🕷️', slogan: '"能力越大，责任越大。"', desc: '你善良、幽默、充满活力，但也背负着沉重的责任感。你总是在普通生活和英雄使命之间挣扎，但你从未放弃任何一个。你的力量来自于爱，而不是愤怒。', powers: [{n:'敏捷',v:98},{n:'直觉',v:95},{n:'智力',v:88},{n:'意志',v:90},{n:'魅力',v:85}], traits: ['善良幽默', '责任感强', '适应力强', '永不放弃'], ally: ['🤖 钢铁侠（导师）', '🌀 奇异博士（宇宙搭档）', '🛡️ 美队（精神导师）'] },
+  thor:      { name: '雷神', en: 'Thor', emoji: '🔨', slogan: '"我才是神！"', desc: '你自信、豪爽、充满力量，有时候有点莽撞，但内心是真正的英雄。你享受战斗和荣耀，但也在不断成长，学会了谦逊和责任。你的力量不只来自锤子，而是你的内心。', powers: [{n:'力量',v:99},{n:'战斗',v:97},{n:'耐久',v:98},{n:'魅力',v:88},{n:'领导',v:80}], traits: ['力量无双', '豪爽直接', '荣誉感强', '不断成长'], ally: ['🛡️ 美队（战场兄弟）', '💚 绿巨人（力量对决）', '🤖 钢铁侠（互相嫌弃）'] },
+  hulk:      { name: '绿巨人', en: 'Hulk', emoji: '💚', slogan: '"浩克最强！"', desc: '你有着巨大的力量，但也有着深深的内心挣扎。你的愤怒是你的力量，也是你的枷锁。你渴望被接受和理解，内心深处是一个温柔的灵魂。当你学会与自己和解，你才是真正无敌的。', powers: [{n:'力量',v:100},{n:'耐久',v:100},{n:'爆发',v:99},{n:'智力',v:75},{n:'控制',v:60}], traits: ['力量无限', '情感丰富', '内心挣扎', '渴望理解'], ally: ['🛡️ 美队（稳定力量）', '🔨 雷神（力量对决）', '🌀 奇异博士（内心探索）'] },
+  widow:     { name: '黑寡妇', en: 'Black Widow', emoji: '🏹', slogan: '"我有很多红色账目需要偿还。"', desc: '你冷静、精准、神秘，有着复杂的过去。你不依赖超能力，只靠技巧、智慧和意志力。你表面冷漠，但内心有着强烈的忠诚和情感。你是团队中最不可或缺的存在。', powers: [{n:'技巧',v:99},{n:'情报',v:98},{n:'意志',v:97},{n:'战斗',v:92},{n:'魅力',v:90}], traits: ['冷静精准', '神秘深沉', '极度忠诚', '独立坚强'], ally: ['🛡️ 美队（最佳搭档）', '🏹 鹰眼（灵魂伴侣）', '🤖 钢铁侠（互相欣赏）'] },
+  strange:   { name: '奇异博士', en: 'Doctor Strange', emoji: '🌀', slogan: '"我来看守这块石头。"', desc: '你聪明、深沉、有点傲慢，但有着极强的使命感。你愿意为了更大的善牺牲一切，包括自己。你看到了别人看不到的可能性，承担着别人无法承担的重量。', powers: [{n:'智力',v:99},{n:'魔法',v:100},{n:'远见',v:98},{n:'意志',v:95},{n:'牺牲',v:99}], traits: ['智慧深远', '使命感强', '愿意牺牲', '看透本质'], ally: ['🕷️ 蜘蛛侠（宇宙搭档）', '🤖 钢铁侠（宿命相遇）', '💚 绿巨人（内心探索）'] }
+}
+
+let scores = {}
+Object.keys(HEROES).forEach(k => scores[k] = 0)
+let curIdx = 0
+let answers = []
+
+function startTest() {
+  Object.keys(HEROES).forEach(k => scores[k] = 0)
+  curIdx = 0
+  answers = new Array(QUESTIONS.length).fill(-1)
+  showScreen('screen-test')
+  renderQ()
+}
+
+function renderQ() {
+  const q = QUESTIONS[curIdx]
+  document.getElementById('q-text').textContent = q.text
+  document.getElementById('q-scene').textContent = q.scene
+  document.getElementById('q-cur').textContent = curIdx + 1
+  document.getElementById('q-total').textContent = QUESTIONS.length
+  document.getElementById('progress-fill').style.width = (curIdx / QUESTIONS.length * 100) + '%'
+  document.getElementById('options-wrap').innerHTML = q.opts.map((opt, i) => `
+    <div class="opt ${answers[curIdx] === i ? 'selected' : ''}" onclick="selectOpt(${i})">
+      <div class="opt-text">${opt[0]}</div>
+    </div>
+  `).join('')
+}
+
+function selectOpt(idx) {
+  const q = QUESTIONS[curIdx]
+  const prev = answers[curIdx]
+  if (prev !== -1) scores[q.opts[prev][1]]--
+  answers[curIdx] = idx
+  scores[q.opts[idx][1]]++
+  document.querySelectorAll('.opt').forEach((el, i) => el.classList.toggle('selected', i === idx))
+  setTimeout(() => {
+    if (curIdx < QUESTIONS.length - 1) { curIdx++; renderQ() }
+    else showResult()
+  }, 220)
+}
+
+function showResult() {
+  const top = Object.keys(scores).reduce((a, b) => scores[a] >= scores[b] ? a : b)
+  const h = HEROES[top]
+  document.getElementById('r-emoji').textContent = h.emoji
+  document.getElementById('r-name').textContent = h.name
+  document.getElementById('r-en').textContent = h.en
+  document.getElementById('r-slogan').textContent = h.slogan
+  document.getElementById('r-desc').textContent = h.desc
+  document.getElementById('r-powers').innerHTML = h.powers.map(p => `
+    <div class="power-item">
+      <div class="power-label">${p.n}</div>
+      <div class="power-bar-bg"><div class="power-bar-fill" style="width:${p.v}%"></div></div>
+      <div class="power-val">${p.v}</div>
+    </div>
+  `).join('')
+  document.getElementById('r-traits').innerHTML = h.traits.map(s => `<span class="trait">${s}</span>`).join('')
+  document.getElementById('r-ally').innerHTML = h.ally.map(s => `<div class="ally">${s}</div>`).join('')
+  showScreen('screen-result')
+}
+
+function retry() { showScreen('screen-home') }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo(0, 0)
+}
+</script>
+</body>
+</html>

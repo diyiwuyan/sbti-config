@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>你是几级牛马？</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #0d0d0d; color: #eee; font-family: -apple-system, 'PingFang SC', sans-serif; min-height: 100vh; }
+  .screen { display: none; padding: 0 0 60px; }
+  .screen.active { display: block; }
+
+  /* Home */
+  .home-top { background: linear-gradient(160deg, #1a1200 0%, #0d0d0d 65%); padding: 56px 24px 28px; text-align: center; }
+  .home-emoji { font-size: 72px; display: block; margin-bottom: 14px; }
+  .home-title { font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+  .home-sub { font-size: 14px; color: #555; line-height: 1.7; }
+  .level-preview { padding: 16px 24px; display: flex; flex-direction: column; gap: 8px; }
+  .lp-item { background: #141400; border: 1px solid #2a2800; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .lp-emoji { font-size: 24px; }
+  .lp-info { flex: 1; }
+  .lp-name { font-size: 14px; font-weight: 700; color: #ddd; }
+  .lp-desc { font-size: 12px; color: #555; margin-top: 2px; }
+  .lp-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
+  .btn-start { width: calc(100% - 48px); margin: 8px 24px 0; padding: 18px; background: linear-gradient(135deg, #c8a000, #7a5f00); color: #fff; font-size: 18px; font-weight: 700; border: none; border-radius: 16px; cursor: pointer; }
+
+  /* Test */
+  .progress-bar-wrap { height: 4px; background: #141400; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #c8a000, #ffd700); transition: width 0.4s; }
+  .q-header { padding: 20px 24px 0; }
+  .q-num { font-size: 13px; color: #444; margin-bottom: 4px; }
+  .q-num span { color: #c8a000; font-weight: 700; }
+  .q-scene { font-size: 12px; color: #333; background: #141400; border-radius: 20px; padding: 4px 12px; display: inline-block; margin-bottom: 16px; }
+  .q-text { font-size: 17px; color: #eee; line-height: 1.7; font-weight: 600; padding: 0 24px 20px; }
+  .options { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 40px; }
+  .opt { background: #141400; border: 1px solid #2a2800; border-radius: 14px; padding: 16px 20px; cursor: pointer; transition: all 0.15s; }
+  .opt:active { background: #1e1c00; }
+  .opt.selected { border-color: #c8a000; background: #c8a00022; }
+  .opt-text { font-size: 15px; color: #bbb; line-height: 1.5; }
+
+  /* Result */
+  .result-top { text-align: center; padding: 48px 24px 24px; background: linear-gradient(160deg, #1a1200 0%, #0d0d0d 70%); }
+  .result-big { font-size: 88px; display: block; margin-bottom: 12px; animation: stampIn 0.4s ease; }
+  @keyframes stampIn { 0%{transform:scale(1.5);opacity:0} 100%{transform:scale(1);opacity:1} }
+  .result-level-badge { display: inline-block; padding: 6px 20px; border-radius: 20px; font-size: 13px; font-weight: 900; letter-spacing: 2px; margin-bottom: 12px; }
+  .result-name { font-size: 34px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+  .result-slogan { font-size: 14px; color: #888; font-style: italic; line-height: 1.6; }
+
+  .score-bar-wrap { margin: 0 24px 14px; background: #141400; border: 1px solid #2a2800; border-radius: 16px; padding: 20px; }
+  .score-bar-title { font-size: 12px; color: #444; font-weight: 700; letter-spacing: 2px; margin-bottom: 14px; }
+  .score-bar-bg { height: 12px; background: #1e1c00; border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+  .score-bar-fill { height: 100%; border-radius: 6px; transition: width 1.2s ease; }
+  .score-labels { display: flex; justify-content: space-between; font-size: 11px; color: #444; }
+
+  .result-card { background: #141400; border: 1px solid #2a2800; border-radius: 16px; padding: 20px; margin: 0 24px 14px; }
+  .rc-title { font-size: 12px; font-weight: 700; color: #444; letter-spacing: 2px; margin-bottom: 14px; }
+  .rc-text { font-size: 14px; color: #999; line-height: 1.8; }
+  .symptom-list { display: flex; flex-direction: column; gap: 8px; }
+  .symptom { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #999; line-height: 1.5; }
+  .symptom-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .advice-list { display: flex; flex-direction: column; gap: 8px; }
+  .advice { background: #1e1c00; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #aaa; line-height: 1.6; }
+  .btn-retry { width: calc(100% - 48px); margin: 8px 24px 0; padding: 16px; background: #141400; border: 1px solid #2a2800; color: #666; font-size: 16px; font-weight: 700; border-radius: 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-home">
+  <div class="home-top">
+    <span class="home-emoji">🐂</span>
+    <div class="home-title">你是几级牛马？</div>
+    <div class="home-sub">职场生存等级测定<br>从青铜到传说，你在哪一级？</div>
+  </div>
+  <div class="level-preview">
+    <div class="lp-item">
+      <span class="lp-emoji">🌱</span>
+      <div class="lp-info"><div class="lp-name">青铜牛马</div><div class="lp-desc">刚入职场，懵懂无知，充满希望</div></div>
+      <span class="lp-badge" style="background:#cd7f3222;color:#cd7f32;border:1px solid #cd7f3244">青铜</span>
+    </div>
+    <div class="lp-item">
+      <span class="lp-emoji">⚙️</span>
+      <div class="lp-info"><div class="lp-name">白银牛马</div><div class="lp-desc">开始懂规则，但还在被规则支配</div></div>
+      <span class="lp-badge" style="background:#c0c0c022;color:#c0c0c0;border:1px solid #c0c0c044">白银</span>
+    </div>
+    <div class="lp-item">
+      <span class="lp-emoji">🔥</span>
+      <div class="lp-info"><div class="lp-name">黄金牛马</div><div class="lp-desc">熟练工，内卷高手，但开始怀疑人生</div></div>
+      <span class="lp-badge" style="background:#ffd70022;color:#ffd700;border:1px solid #ffd70044">黄金</span>
+    </div>
+    <div class="lp-item">
+      <span class="lp-emoji">💎</span>
+      <div class="lp-info"><div class="lp-name">铂金牛马</div><div class="lp-desc">身经百战，已经麻了，但还在坚持</div></div>
+      <span class="lp-badge" style="background:#e5e4e222;color:#e5e4e2;border:1px solid #e5e4e244">铂金</span>
+    </div>
+    <div class="lp-item">
+      <span class="lp-emoji">👑</span>
+      <div class="lp-info"><div class="lp-name">传说牛马</div><div class="lp-desc">已经超越了牛马，成为了牛马本马</div></div>
+      <span class="lp-badge" style="background:#ff450022;color:#ff4500;border:1px solid #ff450044">传说</span>
+    </div>
+  </div>
+  <button class="btn-start" onclick="startTest()">开始测试</button>
+</div>
+
+<div class="screen" id="screen-test">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="q-header">
+    <div class="q-num">第 <span id="q-cur">1</span> / <span id="q-total">15</span> 题</div>
+    <div class="q-scene" id="q-scene"></div>
+  </div>
+  <div class="q-text" id="q-text"></div>
+  <div class="options" id="options-wrap"></div>
+</div>
+
+<div class="screen" id="screen-result">
+  <div class="result-top">
+    <span class="result-big" id="r-emoji"></span>
+    <div class="result-level-badge" id="r-badge"></div>
+    <div class="result-name" id="r-name"></div>
+    <div class="result-slogan" id="r-slogan"></div>
+  </div>
+  <div class="score-bar-wrap">
+    <div class="score-bar-title">🐂 牛马指数</div>
+    <div class="score-bar-bg"><div class="score-bar-fill" id="r-bar" style="width:0%"></div></div>
+    <div class="score-labels"><span>青铜</span><span>白银</span><span>黄金</span><span>铂金</span><span>传说</span></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">📋 诊断报告</div>
+    <div class="rc-text" id="r-desc"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">🔍 典型症状</div>
+    <div class="symptom-list" id="r-symptoms"></div>
+  </div>
+  <div class="result-card">
+    <div class="rc-title">💊 处方建议</div>
+    <div class="advice-list" id="r-advice"></div>
+  </div>
+  <button class="btn-retry" onclick="retry()">🔄 重新测试</button>
+</div>
+
+<script>
+// 分数越高 = 牛马程度越深（1-5分）
+const QUESTIONS = [
+  { scene: '⏰ 工作时间', text: '你的日常下班时间是？',
+    opts: [['准时下班，从不加班', 1], ['偶尔加班，一周1-2次', 2], ['经常加班到9点以后', 3], ['加班到11点是常态', 4], ['什么是下班？', 5]] },
+  { scene: '📱 消息回复', text: '周末收到工作消息，你会？',
+    opts: [['不看，周末是我的', 1], ['看了但不一定回', 2], ['看了，重要的才回', 3], ['基本都会回，怕耽误事', 4], ['秒回，还主动跟进', 5]] },
+  { scene: '🏖️ 假期', text: '你上次真正放松的假期是？',
+    opts: [['上周，我很会休息', 1], ['上个月，还不错', 2], ['三个月前，有点久了', 3], ['半年以上，想不起来了', 4], ['什么是假期？', 5]] },
+  { scene: '😴 睡眠', text: '你的睡眠状况是？',
+    opts: [['每天8小时，睡得很好', 1], ['7小时左右，偶尔失眠', 2], ['6小时，经常睡前刷手机', 3], ['5小时，脑子停不下来', 4], ['睡着了还在想工作', 5]] },
+  { scene: '💬 口头禅', text: '你最近说得最多的话是？',
+    opts: [['今天天气真好', 1], ['这周还好，不算太忙', 2], ['最近有点累，还好', 3], ['太忙了，忙死了', 4], ['我已经麻了', 5]] },
+  { scene: '📊 KPI', text: '面对KPI/OKR，你的态度是？',
+    opts: [['合理目标，正常完成', 1], ['有点压力，但能接受', 2], ['压力很大，但咬牙撑', 3], ['已经放弃理解，只求完成', 4], ['KPI是我的信仰', 5]] },
+  { scene: '🍱 午饭', text: '你的午饭通常是？',
+    opts: [['好好吃饭，享受午休', 1], ['随便吃，但会休息一下', 2], ['边吃边看手机/电脑', 3], ['叫外卖，在工位吃', 4], ['什么午饭？我在开会', 5]] },
+  { scene: '🤔 跳槽', text: '你对现在工作的感受是？',
+    opts: [['挺好的，没想过跳', 1], ['还行，偶尔想想', 2], ['有点倦了，但懒得动', 3], ['每天都在想跳，但没行动', 4], ['已经超越了跳槽的念头', 5]] },
+  { scene: '💰 薪资', text: '你觉得自己的薪资和付出相比？',
+    opts: [['很匹配，很满意', 1], ['基本匹配，还行', 2], ['有点亏，但能接受', 3], ['明显亏，但没办法', 4], ['我已经不计较了', 5]] },
+  { scene: '🎯 会议', text: '你每天的会议数量是？',
+    opts: [['0-1个，很清净', 1], ['2-3个，正常', 2], ['4-5个，有点多', 3], ['6个以上，会议套会议', 4], ['我的日历是一整块蓝色', 5]] },
+  { scene: '🧠 状态', text: '你的工作状态通常是？',
+    opts: [['专注高效，有条不紊', 1], ['还行，偶尔走神', 2], ['经常分心，靠deadline驱动', 3], ['靠咖啡和意志力撑着', 4], ['已经进入自动驾驶模式', 5]] },
+  { scene: '🌙 睡前', text: '睡前你通常在想？',
+    opts: [['今天过得不错，明天继续', 1], ['明天有什么事要做', 2], ['那个需求怎么做比较好', 3], ['那个bug还没修，那个邮件还没回', 4], ['我是不是应该辞职', 5]] },
+  { scene: '🎉 成就感', text: '你上次感到工作有意义是？',
+    opts: [['最近就有，经常有', 1], ['上个月，偶尔有', 2], ['记不清了，很久没有', 3], ['已经不记得那种感觉了', 4], ['意义？我只求活着', 5]] },
+  { scene: '🏃 运动', text: '你的运动频率是？',
+    opts: [['每周3次以上，很规律', 1], ['每周1-2次，还行', 2], ['偶尔，一个月几次', 3], ['很少，没时间没精力', 4], ['走去厕所算吗', 5]] },
+  { scene: '🔮 未来', text: '你对未来5年的规划是？',
+    opts: [['清晰，正在执行', 1], ['大概有方向，慢慢来', 2], ['有想法，但没时间想', 3], ['活着就行，别想太多', 4], ['5年？我只想到明天', 5]] }
+]
+
+const LEVELS = [
+  { min: 15, max: 29, name: '青铜牛马', emoji: '🌱', badge: '青铜', badgeStyle: 'background:#cd7f3233;color:#cd7f32;border:1px solid #cd7f3266', barColor: '#cd7f32', barPct: 15,
+    slogan: '"工作是生活的一部分，不是全部。"',
+    desc: '恭喜你！你是一匹健康的青铜牛马。你刚踏入职场，或者你已经找到了工作与生活的平衡。你对工作有热情，但不会让它吞噬你的生活。这种状态非常珍贵，请好好保持。',
+    symptoms: ['偶尔会因为工作感到压力', '有时候会想"这个需求合理吗"', '还没有完全被职场文化同化'],
+    advice: ['继续保持边界感，这是你最大的财富', '多和同样健康的人交流，互相影响', '记录下现在的感受，以后可能会用到'] },
+  { min: 30, max: 44, name: '白银牛马', emoji: '⚙️', badge: '白银', badgeStyle: 'background:#c0c0c033;color:#c0c0c0;border:1px solid #c0c0c066', barColor: '#c0c0c0', barPct: 35,
+    slogan: '"我知道这不对，但我还是做了。"',
+    desc: '你是一匹白银牛马。你已经开始被职场规则塑造，偶尔加班，偶尔牺牲休息时间。你还没有完全失去自我，但已经开始妥协。这是一个关键时期，你的选择会决定你的走向。',
+    symptoms: ['周末会看工作消息，但还有点抵触', '开始用"还好"来回答"最近怎么样"', '午饭时间开始缩短'],
+    advice: ['设定一个不可侵犯的个人时间', '学会说"这个需求不合理"', '找到工作之外真正让你快乐的事'] },
+  { min: 45, max: 59, name: '黄金牛马', emoji: '🔥', badge: '黄金', badgeStyle: 'background:#ffd70033;color:#ffd700;border:1px solid #ffd70066', barColor: '#ffd700', barPct: 58,
+    slogan: '"我已经习惯了，但我不甘心。"',
+    desc: '你是一匹黄金牛马。你是职场的熟练工，内卷高手，但内心开始出现裂缝。你知道这样不对，但已经很难改变。你的身体和精神都在透支，但你还在撑着。',
+    symptoms: ['"最近太忙了"是你的口头禅', '睡前会想工作的事', '已经不记得上次真正放松是什么时候'],
+    advice: ['认真考虑一次真正的假期', '和信任的人聊聊你的真实状态', '开始记录你的时间，看看钱都花在哪了'] },
+  { min: 60, max: 69, name: '铂金牛马', emoji: '💎', badge: '铂金', badgeStyle: 'background:#e5e4e233;color:#e5e4e2;border:1px solid #e5e4e266', barColor: '#e5e4e2', barPct: 78,
+    slogan: '"我已经麻了，但还没死。"',
+    desc: '你是一匹铂金牛马。你已经身经百战，对职场的一切都有了"麻木的接受"。你不再愤怒，不再抱怨，只是默默执行。这种状态很危险，因为你已经失去了感知痛苦的能力。',
+    symptoms: ['已经不记得上次感到工作有意义', '靠咖啡和意志力维持运转', '开始觉得"这就是生活"'],
+    advice: ['这是一个需要认真对待的信号', '考虑和心理咨询师聊聊', '给自己一个月，认真想想你真正想要什么'] },
+  { min: 70, max: 75, name: '传说牛马', emoji: '👑', badge: '传说', badgeStyle: 'background:#ff450033;color:#ff4500;border:1px solid #ff450066', barColor: '#ff4500', barPct: 96,
+    slogan: '"我已经超越了牛马，成为了牛马本马。"',
+    desc: '你是一匹传说级牛马。你已经不是在被动接受，而是主动成为了系统的一部分。你的日历是蓝色的，你的睡眠是碎片化的，你的假期是不存在的。你需要立刻停下来，认真审视自己的生活。',
+    symptoms: ['什么是下班？什么是假期？', '已经进入自动驾驶模式', '身体可能已经在发出警告信号'],
+    advice: ['请认真对待你的身体和精神健康', '和家人或朋友谈谈你的状态', '这不是荣誉，这是需要改变的信号'] }
+]
+
+let totalScore = 0
+let curIdx = 0
+let answers = []
+
+function startTest() {
+  totalScore = 0
+  curIdx = 0
+  answers = new Array(QUESTIONS.length).fill(-1)
+  showScreen('screen-test')
+  renderQ()
+}
+
+function renderQ() {
+  const q = QUESTIONS[curIdx]
+  document.getElementById('q-text').textContent = q.text
+  document.getElementById('q-scene').textContent = q.scene
+  document.getElementById('q-cur').textContent = curIdx + 1
+  document.getElementById('q-total').textContent = QUESTIONS.length
+  document.getElementById('progress-fill').style.width = (curIdx / QUESTIONS.length * 100) + '%'
+  document.getElementById('options-wrap').innerHTML = q.opts.map((opt, i) => `
+    <div class="opt ${answers[curIdx] === i ? 'selected' : ''}" onclick="selectOpt(${i})">
+      <div class="opt-text">${opt[0]}</div>
+    </div>
+  `).join('')
+}
+
+function selectOpt(idx) {
+  const q = QUESTIONS[curIdx]
+  const prev = answers[curIdx]
+  if (prev !== -1) totalScore -= q.opts[prev][1]
+  answers[curIdx] = idx
+  totalScore += q.opts[idx][1]
+  document.querySelectorAll('.opt').forEach((el, i) => el.classList.toggle('selected', i === idx))
+  setTimeout(() => {
+    if (curIdx < QUESTIONS.length - 1) { curIdx++; renderQ() }
+    else showResult()
+  }, 220)
+}
+
+function showResult() {
+  const lv = LEVELS.find(l => totalScore >= l.min && totalScore <= l.max) || LEVELS[LEVELS.length - 1]
+  document.getElementById('r-emoji').textContent = lv.emoji
+  const badge = document.getElementById('r-badge')
+  badge.textContent = lv.badge + ' 级牛马'
+  badge.style.cssText = lv.badgeStyle
+  document.getElementById('r-name').textContent = lv.name
+  document.getElementById('r-slogan').textContent = lv.slogan
+  document.getElementById('r-desc').textContent = lv.desc
+  const bar = document.getElementById('r-bar')
+  bar.style.background = `linear-gradient(90deg, #c8a000, ${lv.barColor})`
+  setTimeout(() => { bar.style.width = lv.barPct + '%' }, 100)
+  document.getElementById('r-symptoms').innerHTML = lv.symptoms.map(s => `
+    <div class="symptom"><span class="symptom-icon">⚠️</span><span>${s}</span></div>
+  `).join('')
+  document.getElementById('r-advice').innerHTML = lv.advice.map(s => `
+    <div class="advice">💡 ${s}</div>
+  `).join('')
+  showScreen('screen-result')
+}
+
+function retry() { showScreen('screen-home') }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo(0, 0)
+}
+</script>
+</body>
+</html>
